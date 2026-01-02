@@ -30,13 +30,13 @@
         "text": "© 2026 Yukaze3D. Tous droits réservés."
     }, 
         "audio": {
-        "source": "./theme.mp3",
-        "volume": 0.4,
+        "source": "./config/theme.mp3",
+        "volume": 0.2,
         "btnText": "Rentrer dans la Forge"
     },
     "creator": {
         "title": "Le Createur",
-        "image": "projets/yukazeme.jpg",
+        "image": "impression_artefacts/yukazeme.jpg",
         "imageAlt": "Yukaze - Createur de Yukaze3D",
         "intro": "Passionne par les univers videoludiques, des vastes plaines de Final Fantasy aux arenes de League of Legends, j'ai decide de briser la barriere de l'ecran.",
         "mission": "Mon metier, creer des ponts entre votre imagination et la realite.",

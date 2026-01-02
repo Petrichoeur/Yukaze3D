@@ -2,11 +2,26 @@
 
 // --- PASSWORD PROTECTION ---
 const DASHBOARD_AUTH_KEY = 'yukaze_dashboard_auth';
-const DASHBOARD_PASSWORD_HASH = '8a5e3f9d2c1b4e7a'; // Simple obfuscation
+const DASHBOARD_AUTH_TOKEN = 'authenticated';
 
 function checkAuth() {
     const auth = sessionStorage.getItem(DASHBOARD_AUTH_KEY);
-    return auth === DASHBOARD_PASSWORD_HASH;
+    return auth === DASHBOARD_AUTH_TOKEN;
+}
+
+async function verifyPassword(password) {
+    try {
+        const response = await fetch('/api/auth/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password })
+        });
+        const result = await response.json();
+        return result.success === true;
+    } catch (error) {
+        console.error('Authentication error:', error);
+        return false;
+    }
 }
 
 function initLoginOverlay() {
@@ -23,12 +38,20 @@ function initLoginOverlay() {
     // Lock the dashboard
     document.body.classList.add('dashboard-locked');
 
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const password = passwordInput.value;
+        const submitBtn = form.querySelector('button[type="submit"]');
 
-        if (password === 'florianlegoat') {
-            sessionStorage.setItem(DASHBOARD_AUTH_KEY, DASHBOARD_PASSWORD_HASH);
+        // Disable form while verifying
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verification...';
+        errorMessage.textContent = '';
+
+        const isValid = await verifyPassword(password);
+
+        if (isValid) {
+            sessionStorage.setItem(DASHBOARD_AUTH_KEY, DASHBOARD_AUTH_TOKEN);
             unlockDashboard();
         } else {
             errorMessage.textContent = 'Mot de passe incorrect';
@@ -39,6 +62,10 @@ function initLoginOverlay() {
             form.classList.add('shake');
             setTimeout(() => form.classList.remove('shake'), 500);
         }
+
+        // Re-enable form
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-unlock"></i> Acceder';
     });
 
     passwordInput.focus();
@@ -469,7 +496,7 @@ async function loadShopItems() {
             }
         } catch (apiError) {
             // Fallback to local JSON file
-            const response = await fetch('./shop.json');
+            const response = await fetch('./config/shop.json');
             items = await response.json();
         }
 
@@ -498,7 +525,7 @@ function renderShopItems() {
         } else if (item.fichier && item.fichier.startsWith('http')) {
             imageSrc = item.fichier;
         } else {
-            imageSrc = `./projets/${item.fichier}`;
+            imageSrc = `./impression_artefacts/${item.fichier}`;
         }
         const etsyUrl = item.etsyUrl || item.etsy_url || '';
 
@@ -739,7 +766,7 @@ function openEditShopModal(id) {
         } else if (item.fichier.startsWith('http')) {
             imageSrc = item.fichier;
         } else {
-            imageSrc = `./projets/${item.fichier}`;
+            imageSrc = `./impression_artefacts/${item.fichier}`;
         }
         imagePreview.src = imageSrc;
         imagePreviewContainer.classList.add('visible');

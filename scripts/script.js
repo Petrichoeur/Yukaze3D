@@ -167,7 +167,7 @@ const modalImg = document.getElementById('modal-img-full');
 const modalTitle = document.getElementById('modal-title');
 const modalDesc = document.getElementById('modal-desc');
 const closeModalBtn = document.querySelector('.close-modal');
-const dossierImages = './projets/';
+const dossierImages = './impression_artefacts/';
 
 // --- INITIALISATION AU CHARGEMENT ---
 document.addEventListener('DOMContentLoaded', async () => {
@@ -226,7 +226,7 @@ function activateStartButton() {
 // --- CHARGEMENT CONFIG ADMIN ---
 async function loadAdminConfig() {
     try {
-        const response = await fetch('./admin.json');
+        const response = await fetch('./config/admin.json');
         const config = await response.json();
 
         // Titres & Textes
@@ -319,7 +319,7 @@ if(musicBtn) {
 async function loadProjects() {
     if(!galleryContainer) return;
     try {
-        const response = await fetch('./projets.json');
+        const response = await fetch('./config/projets.json');
         const projets = await response.json();
         
         galleryContainer.innerHTML = ''; 
@@ -513,7 +513,7 @@ async function loadShopItems() {
             }
         } catch (apiError) {
             // Fallback to local JSON file
-            const response = await fetch('./shop.json');
+            const response = await fetch('./config/shop.json');
             items = await response.json();
         }
 

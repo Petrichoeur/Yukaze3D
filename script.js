@@ -1,193 +1,182 @@
-/* =================================================================
-   ZONE DE CONFIGURATION (AJOUTEZ VOS PROJETS ICI)
-   =================================================================
-   Astuce : Copiez-collez un bloc {} et changez juste le nom de l'image.
-*/
-
-const PROJETS = [
-    {
-        fichier: "projet1.jpg",      // Doit être exact (attention aux majuscules)
-        titre: "Guerrière Fantasy",
-        description: "Conception Artisanale et originale"
-    },
-    {
-        fichier: "projet2.jpg",
-        titre: "Demon Witch",
-        description: "Conception Artisanale et originale"
-    },
-    {
-        fichier: "projet3.jpg",
-        titre: "Video-Games figurines",
-        description: "Un large choix de référence Geek"
-    },
-       {
-        fichier: "projet4.jpg",
-        titre: "Chompette",
-        description: "Diorama Chompette peint et usiné"
-    },
-       {
-        fichier: "projet5.jpg",
-        titre: "Krokmou",
-        description: "Porte-Manteau Krokmou, pratique et esthétique"
-    },
-       {
-        fichier: "projet6.jpg",
-        titre: "Pikachu-Sama",
-        description: "Un Pikachu Samuraï, prêt à en découdre"
-    },
-       {
-        fichier: "projet7.jpg",
-        titre: "Pokeball",
-        description: "Un artefact précieux pour capturer ses rêves"
-    }
-    // Exemple d'ajout :
-    /*
-    {
-        fichier: "mon_image.png",
-        titre: "Mon Nouveau Projet",
-        description: "Matériau utilisé"
-    },
-    */
-];
-
-/* =================================================================
-   MOTEUR DU SITE (NE PAS TOUCHER EN DESSOUS SI NON NÉCESSAIRE)
-   ================================================================= */
-
+// --- DOM ELEMENTS ---
 const galleryContainer = document.getElementById('galleryContainer');
+const modal = document.getElementById('ff-modal');
+const modalImg = document.getElementById('modal-img-full');
+const modalTitle = document.getElementById('modal-title');
+const modalDesc = document.getElementById('modal-desc');
+const closeModalBtn = document.querySelector('.close-modal');
 const dossierImages = './projets/';
 
-// 1. Génération Automatique de la Galerie
-function chargerGalerie() {
-    if(!galleryContainer) return;
-    galleryContainer.innerHTML = ''; // Nettoyage
+// --- INITIALISATION ---
+document.addEventListener('DOMContentLoaded', async () => {
+    // 1. D'abord on configure le site via admin.json
+    await loadAdminConfig();
+    // 2. Ensuite on charge les projets
+    await loadProjects();
+    // 3. Enfin on lance les effets visuels
+    initVisuals();
+});
 
-    PROJETS.forEach((projet, index) => {
-        // Création de l'élément HTML
-        const card = document.createElement('div');
-        card.classList.add('card');
+// --- CHARGEMENT CONFIG ADMIN ---
+async function loadAdminConfig() {
+    try {
+        const response = await fetch('./admin.json');
+        const config = await response.json();
+
+        // 1. Meta & Titre
+        document.title = config.meta.title;
+
+        // 2. Logo
+        const logoDiv = document.getElementById('nav-logo');
+        logoDiv.innerHTML = `${config.branding.logoText}<span>${config.branding.logoSuffix}</span>`;
+
+        // 3. Hero Section
+        document.getElementById('hero-title').textContent = config.hero.title;
+        document.getElementById('hero-subtitle').textContent = config.hero.subtitle;
+        document.getElementById('hero-cta').textContent = config.hero.ctaText;
+
+        // 4. About Section
+        document.getElementById('about-title').textContent = config.about.title;
+        document.getElementById('about-desc').textContent = config.about.description;
         
-        // Délai d'apparition en cascade (0.1s, 0.2s, 0.3s...)
-        card.style.transitionDelay = `${index * 0.1}s`;
+        // Stats dynamiques
+        const statsList = document.getElementById('about-stats');
+        config.about.stats.forEach(stat => {
+            const li = document.createElement('li');
+            li.innerHTML = `<strong>${stat.value}</strong> ${stat.label}`;
+            statsList.appendChild(li);
+        });
 
-        card.innerHTML = `
-            <div class="card-image">
-                <img src="${dossierImages}${projet.fichier}" 
-                     alt="${projet.titre}"
-                     loading="lazy"
-                     onerror="this.onerror=null; this.src='https://via.placeholder.com/400x300/111/00d2ff?text=Image+Introuvable';">
-            </div>
-            <div class="card-info">
-                <h3>${projet.titre}</h3>
-                <p>${projet.description}</p>
-            </div>
-        `;
-        galleryContainer.appendChild(card);
-    });
+        // 5. Réseaux Sociaux & Footer
+        document.getElementById('link-etsy').href = config.socials.etsyUrl;
+        document.getElementById('link-insta').href = config.socials.instagramUrl;
+        document.getElementById('link-tiktok').href = config.socials.tiktokUrl;
+        document.getElementById('link-discord').href = config.socials.discordUrl;
+        document.getElementById('footer-text').textContent = config.footer.text;
 
-    // Lancer la détection de scroll une fois les cartes créées
-    observerScroll();
+    } catch (e) {
+        console.error("Erreur chargement admin.json", e);
+    }
 }
 
-// 2. Animation au Scroll (Apparition des éléments)
-function observerScroll() {
+// --- CHARGEMENT PROJETS ---
+async function loadProjects() {
+    try {
+        const response = await fetch('./projets.json');
+        const projets = await response.json();
+        
+        galleryContainer.innerHTML = ''; 
+
+        projets.forEach((projet, index) => {
+            const card = document.createElement('div');
+            card.classList.add('card');
+            card.style.transitionDelay = `${index * 0.1}s`; // Effet cascade
+            
+            card.innerHTML = `
+                <div class="card-image">
+                    <img src="${dossierImages}${projet.fichier}" alt="${projet.titre}" loading="lazy">
+                    <div class="card-info" style="position:absolute; bottom:0; width:100%; background:rgba(0,0,0,0.8);">
+                        <h3>${projet.titre}</h3>
+                    </div>
+                </div>
+            `;
+            
+            // Clic pour ouvrir le modal
+            card.addEventListener('click', () => openModal(projet));
+            galleryContainer.appendChild(card);
+        });
+
+        observeElements();
+
+    } catch (e) {
+        galleryContainer.innerHTML = "<p>Erreur chargement galerie.</p>";
+    }
+}
+
+// --- LOGIQUE MODAL ---
+function openModal(projet) {
+    modalImg.src = `${dossierImages}${projet.fichier}`;
+    modalTitle.textContent = projet.titre;
+    modalDesc.textContent = projet.description;
+    
+    modal.classList.remove('closing');
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+    modal.classList.add('closing');
+    setTimeout(() => {
+        modal.classList.remove('active');
+        modal.classList.remove('closing');
+        modalImg.src = "";
+        document.body.style.overflow = 'auto';
+    }, 400); // Doit matcher l'animation CSS
+}
+
+closeModalBtn.addEventListener('click', closeModal);
+modal.addEventListener('click', (e) => { if(e.target === modal) closeModal(); });
+document.addEventListener('keydown', (e) => { if(e.key === "Escape") closeModal(); });
+
+// --- SYSTEMES VISUELS (Particules & Scroll) ---
+function initVisuals() {
+    initParticles();
+}
+
+function observeElements() {
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('visible');
-                // On arrête d'observer une fois apparu pour économiser des ressources
                 observer.unobserve(entry.target);
             }
         });
-    }, { threshold: 0.15 });
+    }, { threshold: 0.1 });
 
-    // On observe les cartes et le panneau "À propos"
-    document.querySelectorAll('.card, .scroll-reveal').forEach(el => {
-        observer.observe(el);
-    });
+    document.querySelectorAll('.card, .scroll-reveal').forEach(el => observer.observe(el));
 }
 
-// 3. Particules Magiques (Background Canvas)
+// Canvas Particules Simplifié
 const canvas = document.getElementById('etherCanvas');
 const ctx = canvas.getContext('2d');
 let particles = [];
 
-function initCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-}
-
-class Particle {
-    constructor() {
-        this.reset();
-    }
-    reset() {
-        this.x = Math.random() * canvas.width;
-        this.y = Math.random() * canvas.height;
-        this.size = Math.random() * 2;
-        this.speedX = (Math.random() - 0.5) * 0.5;
-        this.speedY = (Math.random() - 0.5) * 0.5;
-        this.opacity = Math.random() * 0.5;
-    }
-    update() {
-        this.x += this.speedX;
-        this.y += this.speedY;
-        
-        // Si sort de l'écran, on le remet de l'autre côté
-        if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
-            this.reset();
-        }
-    }
-    draw() {
-        ctx.fillStyle = `rgba(0, 210, 255, ${this.opacity})`;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fill();
-    }
-}
+function resizeCanvas(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+window.addEventListener('resize', () => { resizeCanvas(); initParticles(); });
 
 function initParticles() {
+    resizeCanvas();
     particles = [];
-    const count = window.innerWidth < 768 ? 40 : 80; // Moins de particules sur mobile
-    for(let i=0; i<count; i++) particles.push(new Particle());
+    const count = window.innerWidth < 768 ? 30 : 60;
+    for(let i=0; i<count; i++) particles.push({
+        x: Math.random()*canvas.width, y: Math.random()*canvas.height,
+        vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5,
+        size: Math.random()*2, opacity: Math.random()*0.5
+    });
+    animateParticles();
 }
 
 function animateParticles() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Dessiner les particules
     particles.forEach(p => {
-        p.update();
-        p.draw();
+        p.x += p.vx; p.y += p.vy;
+        if(p.x<0) p.x=canvas.width; if(p.x>canvas.width) p.x=0;
+        if(p.y<0) p.y=canvas.height; if(p.y>canvas.height) p.y=0;
+        
+        ctx.fillStyle = `rgba(0, 210, 255, ${p.opacity})`;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
     });
-
-    // Dessiner les liens (Constellation)
-    particles.forEach((a, index) => {
-        for(let b = index; b < particles.length; b++) {
-            let dx = a.x - particles[b].x;
-            let dy = a.y - particles[b].y;
-            let distance = dx*dx + dy*dy;
-            
-            // Si proches, on trace un trait
-            if(distance < 15000) {
-                ctx.strokeStyle = `rgba(0, 210, 255, ${0.1 - distance/150000})`;
-                ctx.lineWidth = 0.5;
-                ctx.beginPath();
-                ctx.moveTo(a.x, a.y);
-                ctx.lineTo(particles[b].x, particles[b].y);
-                ctx.stroke();
+    // Liens constellations
+    particles.forEach((a, i) => {
+        for(let j=i; j<particles.length; j++){
+            let dx = a.x - particles[j].x;
+            let dy = a.y - particles[j].y;
+            let dist = dx*dx + dy*dy;
+            if(dist < 10000) {
+                ctx.strokeStyle = `rgba(0,210,255,${0.1 - dist/100000})`;
+                ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(particles[j].x, particles[j].y); ctx.stroke();
             }
         }
     });
-
     requestAnimationFrame(animateParticles);
 }
-
-// Initialisation globale
-window.addEventListener('resize', () => { initCanvas(); initParticles(); });
-window.addEventListener('DOMContentLoaded', () => {
-    initCanvas();
-    initParticles();
-    animateParticles();
-    chargerGalerie(); // Charge les projets Yukaze3D
-});

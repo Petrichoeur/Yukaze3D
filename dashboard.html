@@ -153,6 +153,88 @@
                 </div>
             </div>
         </section>
+
+        <!-- Shop Management Section -->
+        <section class="shop-management-section glass-panel">
+            <div class="shop-header">
+                <h3><i class="fas fa-store"></i> Gestion de la Boutique</h3>
+                <button id="add-shop-item-btn" class="action-btn primary">
+                    <i class="fas fa-plus"></i> Ajouter un Article
+                </button>
+            </div>
+            <p class="shop-description">Gerez les articles de votre boutique. Les modifications sont automatiquement synchronisees avec le site.</p>
+
+            <div class="shop-items-grid" id="shop-items-grid">
+                <p class="empty-state">Chargement des articles...</p>
+            </div>
+        </section>
+
+        <!-- Shop Item Modal -->
+        <div id="shop-modal" class="shop-modal-overlay">
+            <div class="shop-modal-container glass-panel">
+                <div class="shop-modal-header">
+                    <h3 id="shop-modal-title"><i class="fas fa-edit"></i> Modifier l'article</h3>
+                    <button class="close-shop-modal" id="close-shop-modal">&times;</button>
+                </div>
+                <form id="shop-item-form" class="shop-item-form">
+                    <input type="hidden" id="shop-item-id">
+
+                    <div class="form-group">
+                        <label for="shop-item-titre"><i class="fas fa-tag"></i> Titre</label>
+                        <input type="text" id="shop-item-titre" required placeholder="Nom de l'article">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="shop-item-description"><i class="fas fa-align-left"></i> Description</label>
+                        <textarea id="shop-item-description" rows="3" placeholder="Description de l'article"></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="shop-item-prix"><i class="fas fa-euro-sign"></i> Prix</label>
+                            <input type="text" id="shop-item-prix" placeholder="45.00">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="shop-item-fichier"><i class="fas fa-image"></i> Image</label>
+                            <input type="text" id="shop-item-fichier" required placeholder="image.jpg ou URL">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="shop-item-upload"><i class="fas fa-cloud-upload-alt"></i> Telecharger une nouvelle image</label>
+                        <div class="file-upload-container">
+                            <input type="file" id="shop-item-upload" accept="image/jpeg,image/png,image/gif,image/webp">
+                            <label for="shop-item-upload" class="file-upload-label">
+                                <i class="fas fa-folder-open"></i>
+                                <span id="upload-file-name">Choisir un fichier</span>
+                            </label>
+                            <span class="file-upload-hint">JPEG, PNG, GIF, WEBP - Max 5MB</span>
+                        </div>
+                        <div class="file-upload-progress" id="upload-progress">
+                            <div class="progress-bar" id="progress-bar"></div>
+                            <span class="progress-text" id="progress-text">Pret</span>
+                        </div>
+                        <div class="image-preview-container" id="image-preview-container">
+                            <img id="image-preview" src="" alt="Apercu de l'image">
+                            <button type="button" class="remove-preview-btn" id="remove-preview-btn" title="Supprimer l'image">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="shop-item-etsy"><i class="fab fa-etsy"></i> Lien Etsy</label>
+                        <input type="url" id="shop-item-etsy" placeholder="https://www.etsy.com/...">
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" id="cancel-shop-modal" class="action-btn">Annuler</button>
+                        <button type="submit" class="action-btn primary"><i class="fas fa-save"></i> Enregistrer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </main>
 
     <footer class="dashboard-footer">

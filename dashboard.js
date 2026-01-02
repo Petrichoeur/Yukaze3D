@@ -56,10 +56,51 @@ function unlockDashboard() {
 
 const STORAGE_KEY = 'yukaze_flux_data';
 
-// Get flux data from localStorage
-function getFluxData() {
+// Data source toggle (localStorage vs database)
+let useDatabase = true;
+
+// Get flux data from localStorage (fallback)
+function getFluxDataLocal() {
     const data = localStorage.getItem(STORAGE_KEY);
     return data ? JSON.parse(data) : getDefaultData();
+}
+
+// Get flux data from database API (aggregated across all sessions)
+async function getFluxDataFromDatabase() {
+    try {
+        const response = await fetch('/api/flux/aggregate');
+        if (response.ok) {
+            const data = await response.json();
+            // Ensure all required fields exist with defaults
+            return {
+                visits: data.visits || 0,
+                sessions: data.sessions || 0,
+                firstVisit: data.firstVisit,
+                lastVisit: data.lastVisit,
+                interactions: data.interactions || 0,
+                galleryViews: data.galleryViews || 0,
+                musicPlays: data.musicPlays || 0,
+                uniqueVisitors: data.uniqueVisitors || 0,
+                projectViews: data.projectViews || {},
+                sectionViews: data.sectionViews || { hero: 0, gallery: 0, shop: 0, about: 0, contact: 0 },
+                socialClicks: data.socialClicks || { etsy: 0, insta: 0, tiktok: 0, discord: 0 },
+                events: data.events || []
+            };
+        }
+        throw new Error('API not available');
+    } catch (error) {
+        console.warn('Failed to fetch from database, using localStorage:', error);
+        useDatabase = false;
+        return getFluxDataLocal();
+    }
+}
+
+// Get flux data (tries database first, falls back to localStorage)
+async function getFluxData() {
+    if (useDatabase) {
+        return await getFluxDataFromDatabase();
+    }
+    return getFluxDataLocal();
 }
 
 function getDefaultData() {
@@ -242,6 +283,7 @@ function getSectionLabel(section) {
     const labels = {
         hero: 'Le Portail',
         gallery: 'Artefacts',
+        shop: 'Boutique',
         about: 'L\'Atelier',
         contact: 'Guilde'
     };
@@ -274,8 +316,8 @@ function renderSessionInfo(data) {
 }
 
 // Main render function
-function renderDashboard() {
-    const data = getFluxData();
+async function renderDashboard() {
+    const data = await getFluxData();
 
     renderMetrics(data);
     renderSectionChart(data);
@@ -380,3 +422,475 @@ window.addEventListener('resize', () => {
     resizeCanvas();
     initParticles();
 });
+
+// --- SHOP MANAGEMENT ---
+let shopItems = [];
+const shopItemsGrid = document.getElementById('shop-items-grid');
+const shopModal = document.getElementById('shop-modal');
+const shopModalTitle = document.getElementById('shop-modal-title');
+const shopItemForm = document.getElementById('shop-item-form');
+const addShopItemBtn = document.getElementById('add-shop-item-btn');
+const closeShopModalBtn = document.getElementById('close-shop-modal');
+const cancelShopModalBtn = document.getElementById('cancel-shop-modal');
+
+// Shop form fields
+const shopItemId = document.getElementById('shop-item-id');
+const shopItemTitre = document.getElementById('shop-item-titre');
+const shopItemDescription = document.getElementById('shop-item-description');
+const shopItemPrix = document.getElementById('shop-item-prix');
+const shopItemFichier = document.getElementById('shop-item-fichier');
+const shopItemEtsy = document.getElementById('shop-item-etsy');
+
+// Image upload elements
+const shopItemUpload = document.getElementById('shop-item-upload');
+const uploadFileName = document.getElementById('upload-file-name');
+const uploadProgress = document.getElementById('upload-progress');
+const progressBar = document.getElementById('progress-bar');
+const progressText = document.getElementById('progress-text');
+const imagePreviewContainer = document.getElementById('image-preview-container');
+const imagePreview = document.getElementById('image-preview');
+const removePreviewBtn = document.getElementById('remove-preview-btn');
+
+// Track if we're currently uploading
+let isUploading = false;
+
+// Load shop items from API or local JSON
+async function loadShopItems() {
+    if (!shopItemsGrid) return;
+
+    try {
+        let items;
+        try {
+            const apiResponse = await fetch('/api/shop');
+            if (apiResponse.ok) {
+                items = await apiResponse.json();
+            } else {
+                throw new Error('API not available');
+            }
+        } catch (apiError) {
+            // Fallback to local JSON file
+            const response = await fetch('./shop.json');
+            items = await response.json();
+        }
+
+        shopItems = items;
+        renderShopItems();
+    } catch (e) {
+        console.error("Error loading shop items:", e);
+        shopItemsGrid.innerHTML = '<p class="empty-state">Erreur de chargement des articles</p>';
+    }
+}
+
+// Render shop items grid
+function renderShopItems() {
+    if (!shopItemsGrid) return;
+
+    if (shopItems.length === 0) {
+        shopItemsGrid.innerHTML = '<p class="empty-state">Aucun article dans la boutique</p>';
+        return;
+    }
+
+    shopItemsGrid.innerHTML = shopItems.map(item => {
+        // Handle different image sources: API-uploaded images, URLs, or local files
+        let imageSrc;
+        if (item.fichier && item.fichier.startsWith('/api/images/')) {
+            imageSrc = item.fichier;
+        } else if (item.fichier && item.fichier.startsWith('http')) {
+            imageSrc = item.fichier;
+        } else {
+            imageSrc = `./projets/${item.fichier}`;
+        }
+        const etsyUrl = item.etsyUrl || item.etsy_url || '';
+
+        return `
+            <div class="shop-item-card" data-id="${item.id}">
+                <div class="shop-item-image">
+                    <img src="${imageSrc}" alt="${item.titre}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect fill=%22%23111%22 width=%22100%22 height=%22100%22/><text fill=%22%23555%22 font-size=%2212%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22>No image</text></svg>'">
+                </div>
+                <div class="shop-item-details">
+                    <h4>${item.titre}</h4>
+                    <p>${item.description || 'Pas de description'}</p>
+                    <div class="shop-item-meta">
+                        <span class="shop-item-price">${item.prix || '0.00'}€</span>
+                        ${etsyUrl ? `<a href="${etsyUrl}" target="_blank" class="shop-item-etsy"><i class="fab fa-etsy"></i> Etsy</a>` : ''}
+                    </div>
+                    <div class="shop-item-actions">
+                        <button class="edit-btn" onclick="openEditShopModal('${item.id}')">
+                            <i class="fas fa-edit"></i> Modifier
+                        </button>
+                        <button class="delete-btn" onclick="deleteShopItem('${item.id}')">
+                            <i class="fas fa-trash"></i> Supprimer
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// --- IMAGE UPLOAD FUNCTIONALITY ---
+
+// Handle file selection
+function handleFileSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+        alert('Type de fichier non supporte. Veuillez choisir une image JPEG, PNG, GIF ou WEBP.');
+        resetFileUpload();
+        return;
+    }
+
+    // Validate file size (5MB max)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+        alert('Le fichier est trop volumineux. Taille maximale: 5MB');
+        resetFileUpload();
+        return;
+    }
+
+    // Update filename display
+    if (uploadFileName) {
+        uploadFileName.textContent = file.name;
+    }
+
+    // Show preview
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        if (imagePreview && imagePreviewContainer) {
+            imagePreview.src = e.target.result;
+            imagePreviewContainer.classList.add('visible');
+        }
+    };
+    reader.readAsDataURL(file);
+
+    // Auto-upload the image
+    uploadImage(file);
+}
+
+// Upload image to server
+async function uploadImage(file) {
+    if (isUploading) return;
+    isUploading = true;
+
+    // Show progress
+    if (uploadProgress) {
+        uploadProgress.classList.add('active');
+    }
+    if (progressBar) {
+        progressBar.style.width = '0%';
+    }
+    if (progressText) {
+        progressText.textContent = 'Telechargement en cours...';
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append('image', file);
+
+        // Simulate progress (since fetch doesn't provide upload progress easily)
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += Math.random() * 15;
+            if (progress > 90) progress = 90;
+            if (progressBar) {
+                progressBar.style.width = progress + '%';
+            }
+        }, 200);
+
+        const response = await fetch('/api/images/upload', {
+            method: 'POST',
+            body: formData
+        });
+
+        clearInterval(progressInterval);
+
+        if (response.ok) {
+            const result = await response.json();
+
+            // Complete the progress bar
+            if (progressBar) {
+                progressBar.style.width = '100%';
+            }
+            if (progressText) {
+                progressText.textContent = 'Telecharge avec succes!';
+                progressText.classList.add('success');
+            }
+
+            // Set the image URL in the fichier field
+            if (shopItemFichier) {
+                shopItemFichier.value = result.url;
+            }
+
+            // Hide progress after a short delay
+            setTimeout(() => {
+                if (uploadProgress) {
+                    uploadProgress.classList.remove('active');
+                }
+                if (progressText) {
+                    progressText.classList.remove('success');
+                    progressText.textContent = 'Pret';
+                }
+            }, 2000);
+        } else {
+            const error = await response.json();
+            throw new Error(error.error || 'Echec du telechargement');
+        }
+    } catch (error) {
+        console.error('Error uploading image:', error);
+        if (progressBar) {
+            progressBar.style.width = '100%';
+            progressBar.classList.add('error');
+        }
+        if (progressText) {
+            progressText.textContent = 'Erreur: ' + error.message;
+            progressText.classList.add('error');
+        }
+
+        // Reset after showing error
+        setTimeout(() => {
+            resetFileUpload();
+        }, 3000);
+    } finally {
+        isUploading = false;
+    }
+}
+
+// Reset file upload UI
+function resetFileUpload() {
+    if (shopItemUpload) {
+        shopItemUpload.value = '';
+    }
+    if (uploadFileName) {
+        uploadFileName.textContent = 'Choisir un fichier';
+    }
+    if (uploadProgress) {
+        uploadProgress.classList.remove('active');
+    }
+    if (progressBar) {
+        progressBar.style.width = '0%';
+        progressBar.classList.remove('error');
+    }
+    if (progressText) {
+        progressText.textContent = 'Pret';
+        progressText.classList.remove('success', 'error');
+    }
+    if (imagePreviewContainer) {
+        imagePreviewContainer.classList.remove('visible');
+    }
+    if (imagePreview) {
+        imagePreview.src = '';
+    }
+}
+
+// Remove image preview and clear upload
+function removeImagePreview() {
+    resetFileUpload();
+    // Don't clear the fichier field if it was manually set to a URL
+    // Only clear if it was set by the upload
+    if (shopItemFichier && shopItemFichier.value.startsWith('/api/images/')) {
+        shopItemFichier.value = '';
+    }
+}
+
+// Open modal for adding new item
+function openAddShopModal() {
+    if (!shopModal) return;
+
+    shopModalTitle.innerHTML = '<i class="fas fa-plus"></i> Ajouter un article';
+    shopItemId.value = '';
+    shopItemTitre.value = '';
+    shopItemDescription.value = '';
+    shopItemPrix.value = '';
+    shopItemFichier.value = '';
+    shopItemEtsy.value = '';
+
+    // Reset file upload UI
+    resetFileUpload();
+
+    shopModal.classList.add('active');
+}
+
+// Open modal for editing existing item
+function openEditShopModal(id) {
+    if (!shopModal) return;
+
+    const item = shopItems.find(i => String(i.id) === String(id));
+    if (!item) return;
+
+    shopModalTitle.innerHTML = '<i class="fas fa-edit"></i> Modifier l\'article';
+    shopItemId.value = item.id;
+    shopItemTitre.value = item.titre || '';
+    shopItemDescription.value = item.description || '';
+    shopItemPrix.value = item.prix || '';
+    shopItemFichier.value = item.fichier || '';
+    shopItemEtsy.value = item.etsyUrl || item.etsy_url || '';
+
+    // Reset file upload UI but show current image if exists
+    resetFileUpload();
+
+    // Show preview of current image if it exists
+    if (item.fichier && imagePreview && imagePreviewContainer) {
+        let imageSrc;
+        if (item.fichier.startsWith('/api/images/')) {
+            imageSrc = item.fichier;
+        } else if (item.fichier.startsWith('http')) {
+            imageSrc = item.fichier;
+        } else {
+            imageSrc = `./projets/${item.fichier}`;
+        }
+        imagePreview.src = imageSrc;
+        imagePreviewContainer.classList.add('visible');
+    }
+
+    shopModal.classList.add('active');
+}
+
+// Close shop modal
+function closeShopModal() {
+    if (shopModal) {
+        shopModal.classList.remove('active');
+    }
+}
+
+// Save shop item (create or update)
+async function saveShopItem(e) {
+    e.preventDefault();
+
+    const id = shopItemId.value;
+    const itemData = {
+        fichier: shopItemFichier.value,
+        titre: shopItemTitre.value,
+        description: shopItemDescription.value,
+        prix: shopItemPrix.value,
+        etsyUrl: shopItemEtsy.value
+    };
+
+    try {
+        let response;
+        if (id) {
+            // Update existing item
+            itemData.id = id;
+            response = await fetch('/api/shop/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(itemData)
+            });
+        } else {
+            // Create new item
+            response = await fetch('/api/shop/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(itemData)
+            });
+        }
+
+        if (response.ok) {
+            closeShopModal();
+            await loadShopItems();
+            alert(id ? 'Article mis a jour avec succes!' : 'Article ajoute avec succes!');
+        } else {
+            const error = await response.json();
+            alert('Erreur: ' + (error.error || 'Impossible de sauvegarder l\'article'));
+        }
+    } catch (error) {
+        console.error('Error saving shop item:', error);
+        // Fallback: update local JSON (for demo purposes when API is not available)
+        if (id) {
+            const index = shopItems.findIndex(i => String(i.id) === String(id));
+            if (index !== -1) {
+                shopItems[index] = { ...shopItems[index], ...itemData };
+            }
+        } else {
+            itemData.id = String(Date.now());
+            shopItems.push(itemData);
+        }
+        renderShopItems();
+        closeShopModal();
+        alert('Article sauvegarde localement (synchronisation avec la base de donnees non disponible)');
+    }
+}
+
+// Delete shop item
+async function deleteShopItem(id) {
+    if (!confirm('Voulez-vous vraiment supprimer cet article ?')) return;
+
+    try {
+        const response = await fetch('/api/shop/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id })
+        });
+
+        if (response.ok) {
+            await loadShopItems();
+            alert('Article supprime avec succes!');
+        } else {
+            const error = await response.json();
+            alert('Erreur: ' + (error.error || 'Impossible de supprimer l\'article'));
+        }
+    } catch (error) {
+        console.error('Error deleting shop item:', error);
+        // Fallback: remove from local array
+        shopItems = shopItems.filter(i => String(i.id) !== String(id));
+        renderShopItems();
+        alert('Article supprime localement (synchronisation avec la base de donnees non disponible)');
+    }
+}
+
+// Setup shop management event listeners
+function initShopManagement() {
+    if (addShopItemBtn) {
+        addShopItemBtn.addEventListener('click', openAddShopModal);
+    }
+
+    if (closeShopModalBtn) {
+        closeShopModalBtn.addEventListener('click', closeShopModal);
+    }
+
+    if (cancelShopModalBtn) {
+        cancelShopModalBtn.addEventListener('click', closeShopModal);
+    }
+
+    if (shopItemForm) {
+        shopItemForm.addEventListener('submit', saveShopItem);
+    }
+
+    if (shopModal) {
+        shopModal.addEventListener('click', (e) => {
+            if (e.target === shopModal) closeShopModal();
+        });
+    }
+
+    // Image upload event listeners
+    if (shopItemUpload) {
+        shopItemUpload.addEventListener('change', handleFileSelect);
+    }
+
+    if (removePreviewBtn) {
+        removePreviewBtn.addEventListener('click', removeImagePreview);
+    }
+
+    // Load shop items
+    loadShopItems();
+}
+
+// Make functions available globally
+window.openEditShopModal = openEditShopModal;
+window.deleteShopItem = deleteShopItem;
+
+// Initialize shop management when dashboard is ready
+document.addEventListener('DOMContentLoaded', () => {
+    if (checkAuth()) {
+        initShopManagement();
+    }
+});
+
+// Also init shop management when dashboard is unlocked
+const originalUnlockDashboard = unlockDashboard;
+unlockDashboard = function() {
+    originalUnlockDashboard();
+    initShopManagement();
+};

@@ -28,6 +28,7 @@
         <ul class="nav-links">
             <li><a href="#hero">Le Portail</a></li>
             <li><a href="#gallery">Artefacts</a></li>
+            <li><a href="#shop">Boutique</a></li>
             <li><a href="#about">L'Atelier</a></li>
             <li><a href="#contact">Guilde</a></li>
         </ul>
@@ -48,6 +49,22 @@
         </div>
         <div class="gallery-grid" id="galleryContainer">
             </div>
+    </section>
+
+    <section id="shop" class="section-padding">
+        <div class="section-header">
+            <h2 class="section-title">La Boutique <span class="crystal-icon">♦</span></h2>
+            <p class="section-subtitle">Nos creations disponibles a l'achat</p>
+        </div>
+        <div class="shop-carousel-container">
+            <button class="carousel-btn carousel-prev" id="shopPrev"><i class="fas fa-chevron-left"></i></button>
+            <div class="shop-carousel" id="shopCarousel">
+                <div class="shop-track" id="shopTrack">
+                </div>
+            </div>
+            <button class="carousel-btn carousel-next" id="shopNext"><i class="fas fa-chevron-right"></i></button>
+        </div>
+        <div class="carousel-dots" id="carouselDots"></div>
     </section>
 
     <section id="about" class="section-padding">
@@ -71,6 +88,29 @@
             </div>
              <div class="corner c-tl"></div><div class="corner c-tr"></div>
              <div class="corner c-bl"></div><div class="corner c-br"></div>
+        </div>
+    </div>
+
+    <!-- Shop Modal -->
+    <div id="shop-modal" class="modal-overlay">
+        <div class="modal-container glass-panel shop-modal-content">
+            <span class="close-shop-modal">&times;</span>
+            <div class="modal-image-wrapper shop-modal-image">
+                <img id="shop-modal-img" src="" alt="">
+                <div class="magic-border"></div>
+            </div>
+            <div id="shop-modal-caption">
+                <h3 id="shop-modal-title"></h3>
+                <p id="shop-modal-desc"></p>
+                <div class="shop-modal-price-container">
+                    <span id="shop-modal-price" class="shop-modal-price glowing-price"></span>
+                </div>
+                <a id="shop-modal-etsy-btn" href="#" target="_blank" class="shop-modal-buy-btn">
+                    <i class="fab fa-etsy"></i> Acheter sur Etsy
+                </a>
+            </div>
+            <div class="corner c-tl"></div><div class="corner c-tr"></div>
+            <div class="corner c-bl"></div><div class="corner c-br"></div>
         </div>
     </div>
 

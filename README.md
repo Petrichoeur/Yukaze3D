@@ -1,4 +1,4 @@
-# ⚔️ Yukaze3D - La Forge Numérique
+on# ⚔️ Yukaze3D - La Forge Numérique
 
 > **Site Vitrine Immersif pour Impression & Peinture 3D**
 
@@ -102,7 +102,7 @@ Idéal si vous voulez gérer les versions de votre code.
  * Sous "Build and deployment", sélectionnez la branche main et cliquez sur Save.
  * Attendez 1 à 2 minutes : GitHub vous donnera le lien de votre site.
 📜 Crédits
- * Développement : Généré par IA (Gemini) pour Yukaze3D.
+ * Développement pour Yukaze3D.
  * Police : Cinzel & Lato via Google Fonts.
  * Icônes : Font Awesome.
 Que la forge soit avec vous ! 🔨

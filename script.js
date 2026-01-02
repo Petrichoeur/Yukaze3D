@@ -111,7 +111,7 @@ function closeModal() {
         modal.classList.remove('closing');
         modalImg.src = "";
         document.body.style.overflow = 'auto';
-    }, 400); // Doit matcher l'animation CSS
+    }, 100); // Doit matcher l'animation CSS
 }
 
 closeModalBtn.addEventListener('click', closeModal);

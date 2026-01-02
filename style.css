@@ -511,3 +511,127 @@ footer { background: #020305; padding: 4rem 10% 2rem; text-align: center; border
 .close-shop-modal:hover {
     color: var(--accent);
 }
+
+/* --- CREATOR SECTION --- */
+#creator {
+    background: transparent;
+}
+
+.creator-container {
+    display: flex;
+    flex-direction: row;
+    gap: 3rem;
+    align-items: center;
+    text-align: left;
+    max-width: 1100px;
+}
+
+.creator-image-wrapper {
+    flex-shrink: 0;
+    position: relative;
+    width: 220px;
+    height: 220px;
+}
+
+.creator-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid var(--glass-border);
+    transition: border-color 0.3s ease;
+}
+
+.creator-image-wrapper:hover .creator-image {
+    border-color: rgba(0, 210, 255, 0.4);
+}
+
+.creator-image-border {
+    display: none;
+}
+
+.creator-content {
+    flex: 1;
+}
+
+.creator-intro {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: #aaa;
+    margin-bottom: 1.25rem;
+}
+
+.creator-mission {
+    font-size: 1.05rem;
+    color: #ccc;
+    margin-bottom: 1.25rem;
+    padding-left: 1rem;
+    border-left: 2px solid rgba(0, 210, 255, 0.4);
+}
+
+.creator-mission strong {
+    color: #fff;
+}
+
+.creator-specialties-title {
+    font-family: var(--font-title);
+    font-size: 1.15rem;
+    color: #ddd;
+    margin-bottom: 0.75rem;
+}
+
+.creator-specialties {
+    list-style: none;
+    margin-bottom: 1.25rem;
+}
+
+.creator-specialties li {
+    padding: 0.6rem 0;
+    color: #999;
+    line-height: 1.5;
+    font-size: 0.95rem;
+}
+
+.creator-specialties strong {
+    color: #ccc;
+}
+
+.specialty-icon {
+    color: rgba(0, 210, 255, 0.6);
+    margin-right: 0.5rem;
+}
+
+.creator-conclusion {
+    font-size: 1.05rem;
+    color: #ccc;
+    font-style: italic;
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-left: 2px solid rgba(255, 255, 255, 0.15);
+    margin-top: 1rem;
+}
+
+/* Responsive Creator Section */
+@media (max-width: 900px) {
+    .creator-container {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .creator-image-wrapper {
+        width: 180px;
+        height: 180px;
+    }
+
+    .creator-mission {
+        border-left: none;
+        border-top: 2px solid rgba(0, 210, 255, 0.4);
+        padding-left: 0;
+        padding-top: 1rem;
+    }
+
+    .creator-conclusion {
+        border-left: none;
+        border-top: 2px solid rgba(255, 255, 255, 0.15);
+    }
+}

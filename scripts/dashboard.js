@@ -353,6 +353,11 @@ async function renderDashboard() {
     renderSocialStats(data);
     renderSessionInfo(data);
 
+    // Refresh shop analytics as well
+    if (typeof loadShopAnalytics === 'function') {
+        loadShopAnalytics();
+    }
+
     document.getElementById('last-update-time').textContent = new Date().toLocaleTimeString('fr-FR');
 }
 
@@ -921,6 +926,7 @@ unlockDashboard = function() {
     originalUnlockDashboard();
     initShopManagement();
     initMusicSettings();
+    initShopAnalytics();
 };
 
 // --- MUSIC SETTINGS MANAGEMENT ---
@@ -1312,5 +1318,84 @@ function initMusicSettings() {
 document.addEventListener('DOMContentLoaded', () => {
     if (checkAuth()) {
         initMusicSettings();
+        initShopAnalytics();
     }
 });
+
+// --- SHOP ANALYTICS SECTION ---
+let shopAnalyticsData = null;
+
+// Load shop analytics from API
+async function loadShopAnalytics() {
+    try {
+        const response = await fetch('/api/shop/views/aggregate');
+        if (response.ok) {
+            shopAnalyticsData = await response.json();
+            renderShopAnalytics();
+        } else {
+            throw new Error('API not available');
+        }
+    } catch (error) {
+        console.warn('Failed to load shop analytics:', error);
+        renderShopAnalyticsEmpty();
+    }
+}
+
+// Render shop analytics section
+function renderShopAnalytics() {
+    if (!shopAnalyticsData) return;
+
+    const { summary, articles } = shopAnalyticsData;
+
+    // Update summary stats
+    document.getElementById('shop-total-views').textContent = summary.totalViews || 0;
+    document.getElementById('shop-total-clicks').textContent = summary.totalClicks || 0;
+    document.getElementById('shop-unique-visitors').textContent = summary.uniqueVisitors || 0;
+    document.getElementById('shop-articles-viewed').textContent = summary.articlesViewed || 0;
+
+    // Render top articles list
+    renderTopArticlesList(articles);
+}
+
+// Render top articles ranking
+function renderTopArticlesList(articles) {
+    const container = document.getElementById('shop-top-articles-list');
+    if (!container) return;
+
+    if (!articles || articles.length === 0) {
+        container.innerHTML = '<li class="empty-state">Aucune donnee disponible pour les 30 derniers jours</li>';
+        return;
+    }
+
+    // Take top 5 articles sorted by views + clicks
+    const topArticles = articles
+        .sort((a, b) => (b.views + b.clicks) - (a.views + a.clicks))
+        .slice(0, 5);
+
+    container.innerHTML = topArticles.map((article, index) => `
+        <li class="ranking-item">
+            <span class="rank">#${index + 1}</span>
+            <span class="article-name">${article.articleTitle}</span>
+            <span class="view-stats">${article.views} <i class="fas fa-eye"></i></span>
+            <span class="click-stats">${article.clicks} <i class="fas fa-mouse-pointer"></i></span>
+        </li>
+    `).join('');
+}
+
+// Render empty state when no data available
+function renderShopAnalyticsEmpty() {
+    document.getElementById('shop-total-views').textContent = '0';
+    document.getElementById('shop-total-clicks').textContent = '0';
+    document.getElementById('shop-unique-visitors').textContent = '0';
+    document.getElementById('shop-articles-viewed').textContent = '0';
+
+    const container = document.getElementById('shop-top-articles-list');
+    if (container) {
+        container.innerHTML = '<li class="empty-state">Aucune donnee disponible</li>';
+    }
+}
+
+// Initialize shop analytics
+function initShopAnalytics() {
+    loadShopAnalytics();
+}

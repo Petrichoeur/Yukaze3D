@@ -13,6 +13,24 @@ const FluxTracker = {
         return sessionId;
     },
 
+    // Track shop article view or click
+    async trackShopArticle(articleId, articleTitle, viewType = 'view') {
+        try {
+            await fetch('/api/shop/views/track', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    articleId: String(articleId),
+                    articleTitle,
+                    sessionId: this.getSessionId(),
+                    viewType
+                })
+            });
+        } catch (error) {
+            console.warn('Failed to track shop article:', error);
+        }
+    },
+
     getData() {
         const data = localStorage.getItem(this.STORAGE_KEY);
         return data ? JSON.parse(data) : this.getDefaultData();
@@ -594,7 +612,7 @@ function renderShopCarousel() {
                 <p>${item.description}</p>
                 <div class="shop-card-footer">
                     <span class="shop-price">${item.prix}€</span>
-                    <a href="${etsyUrl}" target="_blank" class="shop-buy-btn" onclick="event.stopPropagation(); FluxTracker.trackSocialClick('etsy')">
+                    <a href="${etsyUrl}" target="_blank" class="shop-buy-btn" data-item-id="${item.id}" data-item-title="${item.titre}">
                         <i class="fab fa-etsy"></i> Acheter
                     </a>
                 </div>
@@ -606,6 +624,15 @@ function renderShopCarousel() {
         imageContainer.addEventListener('click', (e) => {
             e.stopPropagation();
             openShopModal(item, imageSrc);
+        });
+
+        // Add click event to track Etsy button clicks
+        const etsyBtn = card.querySelector('.shop-buy-btn');
+        etsyBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            FluxTracker.trackSocialClick('etsy');
+            // Track article click for boutique analytics
+            FluxTracker.trackShopArticle(item.id, item.titre, 'click');
         });
 
         shopTrack.appendChild(card);
@@ -694,8 +721,11 @@ function openShopModal(item, imageSrc) {
     const etsyUrl = item.etsyUrl || item.etsy_url || '#';
     shopModalEtsyBtn.href = etsyUrl;
 
-    // Track shop item view
+    // Track shop item view (existing tracker)
     FluxTracker.logEvent('gallery_view', { project: `Shop: ${item.titre}` });
+
+    // Track shop article view for boutique analytics (30-day retention)
+    FluxTracker.trackShopArticle(item.id, item.titre, 'view');
 
     shopModal.classList.remove('closing');
     shopModal.classList.add('active');

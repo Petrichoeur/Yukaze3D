@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yukaze3D | Tableau de Flux</title>
+    <link rel="stylesheet" href="dashboard.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Login Overlay -->
+    <div id="login-overlay" class="login-overlay">
+        <div class="login-container glass-panel">
+            <div class="login-header">
+                <i class="fas fa-lock"></i>
+                <h2>Accès Protégé</h2>
+                <p>Veuillez entrer le mot de passe pour accéder au tableau de bord</p>
+            </div>
+            <form id="login-form" class="login-form">
+                <div class="input-group">
+                    <i class="fas fa-key"></i>
+                    <input type="password" id="password-input" placeholder="Mot de passe" autocomplete="off" required>
+                </div>
+                <p id="error-message" class="error-message"></p>
+                <button type="submit" class="login-btn">
+                    <i class="fas fa-unlock"></i> Accéder
+                </button>
+            </form>
+            <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> Retour au site</a>
+        </div>
+    </div>
+
+    <canvas id="etherCanvas"></canvas>
+
+    <nav class="glass-nav">
+        <div class="logo">YUKAZE<span>3D</span> <span class="dashboard-label">Flux Monitor</span></div>
+        <div class="nav-actions">
+            <button id="refresh-btn" class="action-btn"><i class="fas fa-sync-alt"></i> Actualiser</button>
+            <button id="clear-btn" class="action-btn danger"><i class="fas fa-trash"></i> Réinitialiser</button>
+            <a href="index.html" class="action-btn"><i class="fas fa-home"></i> Retour</a>
+        </div>
+    </nav>
+
+    <main class="dashboard-container">
+        <header class="dashboard-header">
+            <h1><i class="fas fa-chart-line"></i> Tableau de Bord Flux</h1>
+            <p class="subtitle">Surveillance de l'activité en temps réel</p>
+            <div class="last-update">Dernière mise à jour: <span id="last-update-time">--</span></div>
+        </header>
+
+        <!-- Summary Cards -->
+        <section class="metrics-grid">
+            <div class="metric-card glass-panel">
+                <div class="metric-icon"><i class="fas fa-eye"></i></div>
+                <div class="metric-content">
+                    <span class="metric-value" id="total-visits">0</span>
+                    <span class="metric-label">Visites Totales</span>
+                </div>
+            </div>
+            <div class="metric-card glass-panel">
+                <div class="metric-icon"><i class="fas fa-hand-pointer"></i></div>
+                <div class="metric-content">
+                    <span class="metric-value" id="total-interactions">0</span>
+                    <span class="metric-label">Interactions</span>
+                </div>
+            </div>
+            <div class="metric-card glass-panel">
+                <div class="metric-icon"><i class="fas fa-images"></i></div>
+                <div class="metric-content">
+                    <span class="metric-value" id="gallery-views">0</span>
+                    <span class="metric-label">Artefacts Vus</span>
+                </div>
+            </div>
+            <div class="metric-card glass-panel">
+                <div class="metric-icon"><i class="fas fa-music"></i></div>
+                <div class="metric-content">
+                    <span class="metric-value" id="music-plays">0</span>
+                    <span class="metric-label">Musique Jouée</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts Section -->
+        <section class="charts-section">
+            <div class="chart-panel glass-panel">
+                <h3><i class="fas fa-chart-bar"></i> Activité par Section</h3>
+                <div class="chart-container" id="section-chart">
+                    <div class="bar-chart" id="section-bars"></div>
+                </div>
+            </div>
+            <div class="chart-panel glass-panel">
+                <h3><i class="fas fa-star"></i> Artefacts Populaires</h3>
+                <div class="chart-container">
+                    <ul class="ranking-list" id="popular-projects"></ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Activity Timeline -->
+        <section class="timeline-section glass-panel">
+            <h3><i class="fas fa-stream"></i> Flux d'Activité Récent</h3>
+            <div class="timeline-container" id="activity-timeline">
+                <p class="empty-state">Aucune activité enregistrée</p>
+            </div>
+        </section>
+
+        <!-- Social Links Stats -->
+        <section class="social-section glass-panel">
+            <h3><i class="fas fa-share-alt"></i> Clics sur Liens Sociaux</h3>
+            <div class="social-stats" id="social-stats">
+                <div class="social-stat">
+                    <i class="fab fa-etsy"></i>
+                    <span class="stat-value" id="clicks-etsy">0</span>
+                    <span class="stat-label">Etsy</span>
+                </div>
+                <div class="social-stat">
+                    <i class="fab fa-instagram"></i>
+                    <span class="stat-value" id="clicks-insta">0</span>
+                    <span class="stat-label">Instagram</span>
+                </div>
+                <div class="social-stat">
+                    <i class="fab fa-tiktok"></i>
+                    <span class="stat-value" id="clicks-tiktok">0</span>
+                    <span class="stat-label">TikTok</span>
+                </div>
+                <div class="social-stat">
+                    <i class="fab fa-discord"></i>
+                    <span class="stat-value" id="clicks-discord">0</span>
+                    <span class="stat-label">Discord</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Session Info -->
+        <section class="session-section glass-panel">
+            <h3><i class="fas fa-clock"></i> Informations de Session</h3>
+            <div class="session-stats">
+                <div class="session-item">
+                    <span class="session-label">Première visite:</span>
+                    <span class="session-value" id="first-visit">--</span>
+                </div>
+                <div class="session-item">
+                    <span class="session-label">Dernière visite:</span>
+                    <span class="session-value" id="last-visit">--</span>
+                </div>
+                <div class="session-item">
+                    <span class="session-label">Sessions totales:</span>
+                    <span class="session-value" id="total-sessions">0</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="dashboard-footer">
+        <p>Yukaze3D Flux Monitor &copy; 2026</p>
+    </footer>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>

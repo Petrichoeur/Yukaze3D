@@ -25,7 +25,7 @@ Bienvenue dans la documentation de **Yukaze3D**. Ce projet est un site web portf
 
 Voici l'organisation requise des fichiers pour que le site fonctionne correctement :
 
-```text
+
 /Yukaze3D
 │
 ├── index.html       # Structure principale (ne pas toucher sauf pour dev avancé)

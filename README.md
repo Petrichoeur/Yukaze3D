@@ -1,4 +1,4 @@
-on# ⚔️ Yukaze3D - La Forge Numérique
+# ⚔️ Yukaze3D - La Forge Numérique
 
 > **Site Vitrine Immersif pour Impression & Peinture 3D**
 

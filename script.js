@@ -233,7 +233,7 @@ async function loadAdminConfig() {
         document.title = config.meta.title;
         if(document.getElementById('nav-logo')) document.getElementById('nav-logo').innerHTML = `${config.branding.logoText}<span>${config.branding.logoSuffix}</span>`;
         if(document.querySelector('.logo-welcome')) document.querySelector('.logo-welcome').innerHTML = `${config.branding.logoText}<span>${config.branding.logoSuffix}</span>`;
-        
+
         document.getElementById('hero-title').textContent = config.hero.title;
         document.getElementById('hero-subtitle').textContent = config.hero.subtitle;
         document.getElementById('hero-cta').textContent = config.hero.ctaText;
@@ -249,6 +249,35 @@ async function loadAdminConfig() {
                 li.innerHTML = `<strong>${stat.value}</strong> ${stat.label}`;
                 statsList.appendChild(li);
             });
+        }
+
+        // Creator Section
+        if(config.creator) {
+            const creatorTitle = document.getElementById('creator-title');
+            const creatorImage = document.getElementById('creator-image');
+            const creatorIntro = document.getElementById('creator-intro');
+            const creatorMission = document.getElementById('creator-mission');
+            const creatorSpecialtiesTitle = document.getElementById('creator-specialties-title');
+            const creatorSpecialties = document.getElementById('creator-specialties');
+            const creatorConclusion = document.getElementById('creator-conclusion');
+
+            if(creatorTitle) creatorTitle.innerHTML = `${config.creator.title} <span class="crystal-icon">♦</span>`;
+            if(creatorImage) {
+                creatorImage.src = config.creator.image;
+                creatorImage.alt = config.creator.imageAlt;
+            }
+            if(creatorIntro) creatorIntro.textContent = config.creator.intro;
+            if(creatorMission) creatorMission.innerHTML = `<strong>${config.creator.mission.split(',')[0]},</strong>${config.creator.mission.split(',').slice(1).join(',')}`;
+            if(creatorSpecialtiesTitle) creatorSpecialtiesTitle.textContent = config.creator.specialtiesTitle;
+            if(creatorSpecialties) {
+                creatorSpecialties.innerHTML = '';
+                config.creator.specialties.forEach(specialty => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span class="specialty-icon">♦</span> <strong>${specialty.title}</strong> : ${specialty.description}`;
+                    creatorSpecialties.appendChild(li);
+                });
+            }
+            if(creatorConclusion) creatorConclusion.textContent = config.creator.conclusion;
         }
 
         // Liens Footer

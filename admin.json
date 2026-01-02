@@ -33,6 +33,28 @@
         "source": "./theme.mp3",
         "volume": 0.4,
         "btnText": "Rentrer dans la Forge"
+    },
+    "creator": {
+        "title": "Le Createur",
+        "image": "projets/yukazeme.jpg",
+        "imageAlt": "Yukaze - Createur de Yukaze3D",
+        "intro": "Passionne par les univers videoludiques, des vastes plaines de Final Fantasy aux arenes de League of Legends, j'ai decide de briser la barriere de l'ecran.",
+        "mission": "Mon metier, creer des ponts entre votre imagination et la realite.",
+        "specialtiesTitle": "Je me specialise dans :",
+        "specialties": [
+            {
+                "title": "L'impression 3D Haute definition",
+                "description": "Pour capturer chaque detail du modele original"
+            },
+            {
+                "title": "L'usinage et la preparation",
+                "description": "Une etape cruciale de post-traitement pour assurer une surface parfaite, sans defaut"
+            },
+            {
+                "title": "La finition Premium",
+                "description": "Je collabore exclusivement avec des peintres figurinistes professionnels pour garantir un rendu visuel digne des meilleures statues de collection"
+            }
+        ],
+        "conclusion": "Mon objectif n'est pas seulement d'imprimer un objet, mais de materialiser une passion."
     }
-    
 }

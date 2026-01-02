@@ -383,15 +383,38 @@ footer { background: #020305; padding: 4rem 10% 2rem; text-align: center; border
 /* --- SHOP MODAL --- */
 .shop-modal-content {
     max-width: 600px;
+    width: 90%;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.shop-modal-image {
+    flex-shrink: 0;
+    max-height: 45vh;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .shop-modal-image img {
-    max-height: 50vh;
+    max-height: 45vh;
+    max-width: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
 }
 
 #shop-modal-caption {
     padding: 1.5rem 0 0;
     text-align: center;
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 #shop-modal-title {
@@ -405,11 +428,12 @@ footer { background: #020305; padding: 4rem 10% 2rem; text-align: center; border
     color: #aaa;
     font-size: 1rem;
     line-height: 1.6;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
+    max-width: 100%;
 }
 
 .shop-modal-price-container {
-    margin: 1.5rem 0;
+    margin: 1rem 0;
 }
 
 /* Glowing price effect */
@@ -476,17 +500,21 @@ footer { background: #020305; padding: 4rem 10% 2rem; text-align: center; border
 .shop-modal-buy-btn {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.75rem;
-    padding: 1rem 2rem;
+    padding: 0.9rem 1.8rem;
     background: transparent;
     border: 2px solid #F56400;
     color: #F56400;
     text-decoration: none;
     font-family: var(--font-title);
-    font-size: 1.1rem;
+    font-size: 1rem;
     border-radius: 50px;
     transition: all 0.3s ease;
-    margin-top: 1rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 
 .shop-modal-buy-btn:hover {
@@ -633,5 +661,92 @@ footer { background: #020305; padding: 4rem 10% 2rem; text-align: center; border
     .creator-conclusion {
         border-left: none;
         border-top: 2px solid rgba(255, 255, 255, 0.15);
+    }
+}
+
+/* Responsive Shop Modal */
+@media (max-width: 768px) {
+    .shop-modal-content {
+        max-width: 95%;
+        width: 95%;
+        padding: 1.5rem;
+        max-height: 85vh;
+    }
+
+    .shop-modal-image {
+        max-height: 35vh;
+    }
+
+    .shop-modal-image img {
+        max-height: 35vh;
+    }
+
+    #shop-modal-title {
+        font-size: 1.4rem;
+    }
+
+    #shop-modal-desc {
+        font-size: 0.9rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .shop-modal-price-container {
+        margin: 0.75rem 0;
+    }
+
+    .glowing-price {
+        font-size: 1.8rem;
+        padding: 0.4rem 1rem;
+    }
+
+    .shop-modal-buy-btn {
+        padding: 0.75rem 1.5rem;
+        font-size: 0.9rem;
+    }
+
+    .close-shop-modal {
+        font-size: 2.5rem;
+        top: 5px;
+        right: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .shop-modal-content {
+        padding: 1rem;
+        max-height: 80vh;
+    }
+
+    .shop-modal-image {
+        max-height: 30vh;
+    }
+
+    .shop-modal-image img {
+        max-height: 30vh;
+    }
+
+    #shop-modal-title {
+        font-size: 1.2rem;
+    }
+
+    #shop-modal-desc {
+        font-size: 0.85rem;
+    }
+
+    .glowing-price {
+        font-size: 1.5rem;
+        padding: 0.3rem 0.8rem;
+    }
+
+    .shop-modal-buy-btn {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.85rem;
+        gap: 0.5rem;
+    }
+
+    .close-shop-modal {
+        font-size: 2rem;
+        top: 5px;
+        right: 10px;
     }
 }

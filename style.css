@@ -1,0 +1,254 @@
+:root {
+    --bg-color: #05070a;
+    --primary: #00d2ff; /* Cyan FF */
+    --secondary: #2a2a72; /* Deep Blue */
+    --accent: #ffd700; /* Gold */
+    --glass: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --font-title: 'Cinzel', serif;
+    --font-body: 'Lato', sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; scroll-behavior: smooth; }
+
+body {
+    background-color: var(--bg-color);
+    color: #fff;
+    font-family: var(--font-body);
+    overflow-x: hidden;
+}
+
+/* Canvas Background */
+#etherCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background: radial-gradient(circle at center, #1a1f35 0%, #000000 100%);
+}
+
+/* Navigation - Style Menu RPG */
+.glass-nav {
+    position: fixed;
+    width: 100%;
+    top: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 5%;
+    z-index: 100;
+    background: rgba(5, 7, 10, 0.7);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--glass-border);
+    transition: 0.4s;
+}
+
+.logo {
+    font-family: var(--font-title);
+    font-size: 1.8rem;
+    letter-spacing: 2px;
+    color: #fff;
+    text-shadow: 0 0 10px var(--primary);
+}
+
+.logo span { color: var(--primary); }
+
+.nav-links { list-style: none; display: flex; }
+.nav-links li { margin-left: 3rem; }
+
+.nav-links a {
+    text-decoration: none;
+    color: #ccc;
+    font-family: var(--font-title);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    position: relative;
+    transition: 0.3s;
+}
+
+.nav-links a::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 1px;
+    bottom: -5px;
+    left: 0;
+    background-color: var(--primary);
+    box-shadow: 0 0 5px var(--primary);
+    transition: 0.3s;
+}
+
+.nav-links a:hover { color: #fff; text-shadow: 0 0 8px var(--primary); }
+.nav-links a:hover::after { width: 100%; }
+
+/* Hero Section */
+#hero {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    position: relative;
+}
+
+.hero-content h1 {
+    font-family: var(--font-title);
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    background: linear-gradient(to right, #fff, var(--primary), #fff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: glow 3s infinite alternate;
+}
+
+.hero-content p {
+    font-size: 1.2rem;
+    color: #aaa;
+    margin-bottom: 2rem;
+    letter-spacing: 1px;
+}
+
+.cta-btn {
+    padding: 15px 40px;
+    background: transparent;
+    border: 1px solid var(--primary);
+    color: var(--primary);
+    font-family: var(--font-title);
+    text-transform: uppercase;
+    text-decoration: none;
+    font-weight: bold;
+    letter-spacing: 2px;
+    position: relative;
+    overflow: hidden;
+    transition: 0.4s;
+    box-shadow: 0 0 10px rgba(0, 210, 255, 0.2);
+}
+
+.cta-btn:hover {
+    background: var(--primary);
+    color: #000;
+    box-shadow: 0 0 30px var(--primary);
+}
+
+/* Gallery - Style Inventaire */
+.section-padding { padding: 5rem 10%; }
+.section-title {
+    font-family: var(--font-title);
+    font-size: 2.5rem;
+    text-align: center;
+    margin-bottom: 0.5rem;
+    color: #fff;
+    border-bottom: 2px solid transparent;
+    display: inline-block;
+    width: 100%;
+}
+.crystal-icon { color: var(--primary); text-shadow: 0 0 10px var(--primary); }
+.section-subtitle { text-align: center; color: #888; margin-bottom: 4rem; }
+
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.card {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 4px; /* Coins légèrement arrondis mais carrés style UI */
+    overflow: hidden;
+    transition: 0.4s;
+    position: relative;
+}
+
+.card:hover {
+    transform: translateY(-10px);
+    border-color: var(--primary);
+    box-shadow: 0 0 20px rgba(0, 210, 255, 0.2);
+}
+
+.card::before {
+    /* Coin doré style FF */
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 0; height: 0;
+    border-top: 2px solid var(--accent);
+    border-left: 2px solid var(--accent);
+    transition: 0.4s;
+    z-index: 10;
+}
+.card:hover::before { width: 20px; height: 20px; }
+
+.card-image {
+    height: 250px;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: 0.5s;
+}
+
+.card:hover img { transform: scale(1.1); }
+
+.card-info { padding: 1.5rem; border-top: 1px solid var(--glass-border); }
+.card-info h3 { font-family: var(--font-title); color: #fff; margin-bottom: 0.5rem; }
+.card-info p { color: var(--primary); font-size: 0.9rem; }
+
+/* About Section */
+.glass-panel {
+    background: rgba(10, 15, 30, 0.6);
+    border: 1px solid var(--glass-border);
+    padding: 3rem;
+    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+}
+.glass-panel::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; width: 50%; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+}
+
+.stats {
+    list-style: none;
+    display: flex;
+    gap: 3rem;
+    margin-top: 2rem;
+}
+.stats li { display: flex; flex-direction: column; font-family: var(--font-title); }
+.stats strong { font-size: 2rem; color: var(--primary); text-shadow: 0 0 10px rgba(0, 210, 255, 0.4); }
+
+/* Footer */
+footer {
+    padding: 2rem;
+    text-align: center;
+    border-top: 1px solid var(--glass-border);
+    background: #020305;
+}
+.socials a { color: #fff; margin: 0 10px; font-size: 1.2rem; transition: 0.3s; }
+.socials a:hover { color: var(--primary); text-shadow: 0 0 10px var(--primary); }
+
+/* Mobile Responsive */
+@media screen and (max-width: 768px) {
+    .nav-links { display: none; } /* Pour faire simple, ajouter JS pour toggle */
+    .hero-content h1 { font-size: 2.5rem; }
+    .stats { flex-direction: column; gap: 1rem; }
+}
+
+@keyframes glow {
+    from { text-shadow: 0 0 10px rgba(0, 210, 255, 0.1); }
+    to { text-shadow: 0 0 20px rgba(0, 210, 255, 0.6), 0 0 10px rgba(255, 255, 255, 0.4); }
+}

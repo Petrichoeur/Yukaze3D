@@ -3,13 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yukaze3D | Forge Numérique</title>
-    <link rel="stylesheet" href="style.css">
+    <title id="page-title">Chargement...</title> <link rel="stylesheet" href="style.css">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@300;400&display=swap" rel="stylesheet">
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -17,7 +15,7 @@
     <canvas id="etherCanvas"></canvas>
 
     <nav class="glass-nav">
-        <div class="logo">YUKAZE<span>3D</span></div>
+        <div class="logo" id="nav-logo">...</div>
         <ul class="nav-links">
             <li><a href="#hero">Le Portail</a></li>
             <li><a href="#gallery">Artefacts</a></li>
@@ -25,61 +23,67 @@
             <li><a href="#contact">Guilde</a></li>
         </ul>
         <div class="burger">
-            <div class="line1"></div>
-            <div class="line2"></div>
-            <div class="line3"></div>
+            <div class="line1"></div><div class="line2"></div><div class="line3"></div>
         </div>
     </nav>
 
     <header id="hero">
         <div class="hero-content">
-            <h1 class="glitch-text">Matérialisez l'Imaginaire</h1>
-            <p>Impression 3D Haute Précision • Conception & Finitions</p>
-            <a href="#gallery" class="cta-btn">Voir les Créations</a>
+            <h1 class="glitch-text" id="hero-title">...</h1>
+            <p id="hero-subtitle">...</p>
+            <a href="#gallery" class="cta-btn" id="hero-cta">Explorer</a>
         </div>
     </header>
 
     <section id="gallery" class="section-padding">
         <div class="section-header">
             <h2 class="section-title">Les Artefacts <span class="crystal-icon">♦</span></h2>
-            <p class="section-subtitle">Dernières invocations sorties de la forge.</p>
         </div>
-        
         <div class="gallery-grid" id="galleryContainer">
             </div>
     </section>
 
     <section id="about" class="section-padding">
         <div class="glass-panel scroll-reveal">
-            <h2>L'Atelier Yukaze</h2>
-            <p>De la modélisation à la peinture, nous transformons le virtuel en tangible. Spécialisés dans les props de cosplay, les figurines et les pièces techniques.</p>
-            <ul class="stats">
-                <li><strong>FDM / SLA</strong> Technologies</li>
-                <li><strong>4K / 8K</strong> Résolution</li>
-                <li><strong>100%</strong> Passion</li>
-            </ul>
+            <h2 id="about-title">...</h2>
+            <p id="about-desc">...</p>
+            <ul class="stats" id="about-stats">
+                </ul>
         </div>
     </section>
+
+    <div id="ff-modal" class="modal-overlay">
+        <div class="modal-container glass-panel">
+            <span class="close-modal">&times;</span>
+            <div class="modal-image-wrapper">
+                <img id="modal-img-full" src="" alt="">
+                <div class="magic-border"></div>
+            </div>
+            <div id="modal-caption">
+                <h3 id="modal-title"></h3>
+                <p id="modal-desc"></p>
+            </div>
+             <div class="corner c-tl"></div><div class="corner c-tr"></div>
+             <div class="corner c-bl"></div><div class="corner c-br"></div>
+        </div>
+    </div>
 
     <footer id="contact">
         <div class="footer-content">
             <h3>Rejoindre la Guilde</h3>
-            <p>Commandez votre propre artefact ou suivez nos aventures.</p>
-            
             <div class="socials-container">
-                <a href="https://www.etsy.com/fr/shop/VOTRE_BOUTIQUE" target="_blank" class="social-link etsy">
+                <a href="#" target="_blank" class="social-link etsy" id="link-etsy">
                     <i class="fab fa-etsy"></i> Boutique Etsy
                 </a>
-                
                 <div class="social-icons">
-                    <a href="#" target="_blank"><i class="fab fa-instagram"></i></a>
-                    <a href="#" target="_blank"><i class="fab fa-tiktok"></i></a>
-                    <a href="#" target="_blank"><i class="fab fa-discord"></i></a>
+                    <a href="#" target="_blank" id="link-insta"><i class="fab fa-instagram"></i></a>
+                    <a href="#" target="_blank" id="link-tiktok"><i class="fab fa-tiktok"></i></a>
+                    <a href="#" target="_blank" id="link-discord"><i class="fab fa-discord"></i></a>
                 </div>
             </div>
         </div>
         <div class="copyright">
-            <p>&copy; 2024 Yukaze3D. Tous droits réservés.</p>
+            <p id="footer-text">&copy; 2024</p>
         </div>
     </footer>
 

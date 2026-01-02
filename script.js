@@ -1,3 +1,116 @@
+// --- FLUX TRACKING SYSTEM ---
+const FluxTracker = {
+    STORAGE_KEY: 'yukaze_flux_data',
+
+    getData() {
+        const data = localStorage.getItem(this.STORAGE_KEY);
+        return data ? JSON.parse(data) : this.getDefaultData();
+    },
+
+    getDefaultData() {
+        return {
+            visits: 0,
+            sessions: 0,
+            firstVisit: null,
+            lastVisit: null,
+            interactions: 0,
+            galleryViews: 0,
+            musicPlays: 0,
+            projectViews: {},
+            sectionViews: {
+                hero: 0,
+                gallery: 0,
+                about: 0,
+                contact: 0
+            },
+            socialClicks: {
+                etsy: 0,
+                insta: 0,
+                tiktok: 0,
+                discord: 0
+            },
+            events: []
+        };
+    },
+
+    saveData(data) {
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
+    },
+
+    logEvent(type, details = {}) {
+        const data = this.getData();
+        const event = {
+            type,
+            details,
+            timestamp: new Date().toISOString()
+        };
+        data.events.unshift(event);
+        // Keep only last 100 events
+        if (data.events.length > 100) {
+            data.events = data.events.slice(0, 100);
+        }
+        data.interactions++;
+        this.saveData(data);
+    },
+
+    trackVisit() {
+        const data = this.getData();
+        const now = new Date().toISOString();
+
+        if (!data.firstVisit) {
+            data.firstVisit = now;
+        }
+
+        // Check if this is a new session (more than 30 minutes since last visit)
+        const lastVisitTime = data.lastVisit ? new Date(data.lastVisit).getTime() : 0;
+        const currentTime = new Date().getTime();
+        if (currentTime - lastVisitTime > 30 * 60 * 1000) {
+            data.sessions++;
+        }
+
+        data.visits++;
+        data.lastVisit = now;
+        this.saveData(data);
+        this.logEvent('page_visit', { page: 'index' });
+    },
+
+    trackGalleryView(projectTitle) {
+        const data = this.getData();
+        data.galleryViews++;
+        if (!data.projectViews[projectTitle]) {
+            data.projectViews[projectTitle] = 0;
+        }
+        data.projectViews[projectTitle]++;
+        this.saveData(data);
+        this.logEvent('gallery_view', { project: projectTitle });
+    },
+
+    trackSectionView(section) {
+        const data = this.getData();
+        if (data.sectionViews[section] !== undefined) {
+            data.sectionViews[section]++;
+            this.saveData(data);
+            this.logEvent('section_view', { section });
+        }
+    },
+
+    trackMusicPlay() {
+        const data = this.getData();
+        data.musicPlays++;
+        this.saveData(data);
+        this.logEvent('music_play', {});
+    },
+
+    trackSocialClick(platform) {
+        const data = this.getData();
+        if (data.socialClicks[platform] !== undefined) {
+            data.socialClicks[platform]++;
+            this.saveData(data);
+            this.logEvent('social_click', { platform });
+        }
+    }
+};
+
 // --- DOM ELEMENTS ---
 const galleryContainer = document.getElementById('galleryContainer');
 const welcomeScreen = document.getElementById('welcome-screen');
@@ -16,15 +129,24 @@ const dossierImages = './projets/';
 
 // --- INITIALISATION AU CHARGEMENT ---
 document.addEventListener('DOMContentLoaded', async () => {
-    
+
+    // 0. Track page visit
+    FluxTracker.trackVisit();
+
     // 1. Charger la config
-    await loadAdminConfig(); 
-    
+    await loadAdminConfig();
+
     // 2. Charger les projets
-    await loadProjects();    
+    await loadProjects();
 
     // 3. Activer le bouton "Entrer" (Correction du bug de clic)
     activateStartButton();
+
+    // 4. Track social link clicks
+    setupSocialTracking();
+
+    // 5. Track section views with IntersectionObserver
+    setupSectionTracking();
 });
 
 // --- FONCTION D'ACTIVATION DU BOUTON START ---
@@ -113,6 +235,7 @@ if(musicBtn) {
             audioPlayer.play();
             musicBtn.classList.add('playing');
             if(musicIcon) { musicIcon.classList.remove('fa-volume-mute'); musicIcon.classList.add('fa-volume-up'); }
+            FluxTracker.trackMusicPlay();
         } else {
             audioPlayer.pause();
             musicBtn.classList.remove('playing');
@@ -164,7 +287,9 @@ function openModal(projet) {
     modalImg.src = `${dossierImages}${projet.fichier}`;
     modalTitle.textContent = projet.titre;
     modalDesc.textContent = projet.description;
-    
+
+    FluxTracker.trackGalleryView(projet.titre);
+
     modal.classList.remove('closing');
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
@@ -241,4 +366,44 @@ function animateParticles() {
         }
     });
     requestAnimationFrame(animateParticles);
+}
+
+// --- FLUX TRACKING SETUP ---
+function setupSocialTracking() {
+    const socialLinks = {
+        'link-etsy': 'etsy',
+        'link-insta': 'insta',
+        'link-tiktok': 'tiktok',
+        'link-discord': 'discord'
+    };
+
+    Object.entries(socialLinks).forEach(([id, platform]) => {
+        const link = document.getElementById(id);
+        if (link) {
+            link.addEventListener('click', () => {
+                FluxTracker.trackSocialClick(platform);
+            });
+        }
+    });
+}
+
+function setupSectionTracking() {
+    const sections = ['hero', 'gallery', 'about', 'contact'];
+    const trackedSections = new Set();
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && !trackedSections.has(entry.target.id)) {
+                trackedSections.add(entry.target.id);
+                FluxTracker.trackSectionView(entry.target.id);
+            }
+        });
+    }, { threshold: 0.3 });
+
+    sections.forEach(sectionId => {
+        const section = document.getElementById(sectionId);
+        if (section) {
+            observer.observe(section);
+        }
+    });
 }

@@ -4,7 +4,7 @@ const welcomeScreen = document.getElementById('welcome-screen');
 const startBtn = document.getElementById('start-experience');
 const audioPlayer = document.getElementById('bg-music');
 const musicBtn = document.getElementById('music-control');
-const musicIcon = musicBtn.querySelector('i');
+const musicIcon = musicBtn ? musicBtn.querySelector('i') : null;
 
 // Modal Elements
 const modal = document.getElementById('ff-modal');
@@ -14,92 +14,116 @@ const modalDesc = document.getElementById('modal-desc');
 const closeModalBtn = document.querySelector('.close-modal');
 const dossierImages = './projets/';
 
-// --- INITIALISATION ---
+// --- INITIALISATION AU CHARGEMENT ---
 document.addEventListener('DOMContentLoaded', async () => {
-    await loadAdminConfig(); // Charger config & Musique
-    await loadProjects();    // Charger galerie
     
-    // NB: On lance les particules uniquement après le clic "Entrer" pour l'effet "Vibe"
+    // 1. Charger la config
+    await loadAdminConfig(); 
+    
+    // 2. Charger les projets
+    await loadProjects();    
+
+    // 3. Activer le bouton "Entrer" (Correction du bug de clic)
+    activateStartButton();
 });
 
-// --- 1. CHARGEMENT CONFIG ADMIN ---
+// --- FONCTION D'ACTIVATION DU BOUTON START ---
+function activateStartButton() {
+    if(startBtn && welcomeScreen) {
+        startBtn.addEventListener('click', () => {
+            console.log("Bouton cliqué !"); // Pour vérifier dans la console
+
+            // A. Essayer de lancer la musique
+            if(audioPlayer) {
+                const playPromise = audioPlayer.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        // Lecture réussie
+                        if(musicBtn) musicBtn.classList.add('playing');
+                    }).catch(error => {
+                        console.warn("La musique n'a pas pu démarrer (bloqué par navigateur ou mauvais lien), mais on ouvre le site quand même.", error);
+                    });
+                }
+            }
+
+            // B. Cacher l'écran d'accueil (Quoi qu'il arrive)
+            welcomeScreen.style.opacity = '0';
+            welcomeScreen.style.visibility = 'hidden';
+            welcomeScreen.style.pointerEvents = 'none'; // Empêche de recliquer dessus
+
+            // C. Lancer les particules
+            initParticles();
+        });
+    } else {
+        console.error("Erreur critique : Le bouton start ou l'écran d'accueil est introuvable.");
+    }
+}
+
+// --- CHARGEMENT CONFIG ADMIN ---
 async function loadAdminConfig() {
     try {
         const response = await fetch('./admin.json');
         const config = await response.json();
 
-        // Branding
+        // Titres & Textes
         document.title = config.meta.title;
-        document.getElementById('nav-logo').innerHTML = `${config.branding.logoText}<span>${config.branding.logoSuffix}</span>`;
-        document.querySelector('.logo-welcome').innerHTML = `${config.branding.logoText}<span>${config.branding.logoSuffix}</span>`;
-
-        // Hero & About
+        if(document.getElementById('nav-logo')) document.getElementById('nav-logo').innerHTML = `${config.branding.logoText}<span>${config.branding.logoSuffix}</span>`;
+        if(document.querySelector('.logo-welcome')) document.querySelector('.logo-welcome').innerHTML = `${config.branding.logoText}<span>${config.branding.logoSuffix}</span>`;
+        
         document.getElementById('hero-title').textContent = config.hero.title;
         document.getElementById('hero-subtitle').textContent = config.hero.subtitle;
         document.getElementById('hero-cta').textContent = config.hero.ctaText;
         document.getElementById('about-title').textContent = config.about.title;
         document.getElementById('about-desc').textContent = config.about.description;
-        
+
         // Stats
         const statsList = document.getElementById('about-stats');
-        config.about.stats.forEach(stat => {
-            const li = document.createElement('li');
-            li.innerHTML = `<strong>${stat.value}</strong> ${stat.label}`;
-            statsList.appendChild(li);
-        });
+        if(statsList) {
+            statsList.innerHTML = ''; // Vide avant de remplir
+            config.about.stats.forEach(stat => {
+                const li = document.createElement('li');
+                li.innerHTML = `<strong>${stat.value}</strong> ${stat.label}`;
+                statsList.appendChild(li);
+            });
+        }
 
-        // Liens
+        // Liens Footer
         document.getElementById('link-etsy').href = config.socials.etsyUrl;
         document.getElementById('link-insta').href = config.socials.instagramUrl;
         document.getElementById('link-tiktok').href = config.socials.tiktokUrl;
         document.getElementById('link-discord').href = config.socials.discordUrl;
         document.getElementById('footer-text').textContent = config.footer.text;
 
-        // AUDIO SETUP (Externe)
-        if(config.audio) {
+        // Audio Setup
+        if(config.audio && audioPlayer) {
             audioPlayer.src = config.audio.source;
             audioPlayer.volume = config.audio.volume;
-            startBtn.innerText = config.audio.btnText;
+            if(startBtn) startBtn.innerText = config.audio.btnText;
         }
 
     } catch (e) {
-        console.error("Erreur admin.json", e);
+        console.error("Erreur chargement admin.json. Vérifiez la syntaxe du fichier.", e);
     }
 }
 
-// --- 2. LOGIQUE D'ACTIVATION (START) ---
-if(startBtn) {
-    startBtn.addEventListener('click', () => {
-        // A. Lancer audio
-        audioPlayer.play().then(() => {
+// --- GESTION MUSIQUE FLOTTANTE ---
+if(musicBtn) {
+    musicBtn.addEventListener('click', () => {
+        if(audioPlayer.paused) {
+            audioPlayer.play();
             musicBtn.classList.add('playing');
-        }).catch(e => console.log("Erreur lecture:", e));
-
-        // B. Cacher écran accueil
-        welcomeScreen.classList.add('hidden');
-
-        // C. Lancer particules
-        initParticles();
+            if(musicIcon) { musicIcon.classList.remove('fa-volume-mute'); musicIcon.classList.add('fa-volume-up'); }
+        } else {
+            audioPlayer.pause();
+            musicBtn.classList.remove('playing');
+            if(musicIcon) { musicIcon.classList.remove('fa-volume-up'); musicIcon.classList.add('fa-volume-mute'); }
+        }
     });
 }
 
-// --- 3. GESTION MUSIQUE FLOTTANTE ---
-musicBtn.addEventListener('click', () => {
-    if(audioPlayer.paused) {
-        audioPlayer.play();
-        musicBtn.classList.add('playing');
-        musicIcon.classList.remove('fa-volume-mute');
-        musicIcon.classList.add('fa-volume-up');
-    } else {
-        audioPlayer.pause();
-        musicBtn.classList.remove('playing');
-        musicIcon.classList.remove('fa-volume-up');
-        musicIcon.classList.add('fa-volume-mute');
-    }
-});
-
-// --- 4. CHARGEMENT GALERIE ---
+// --- CHARGEMENT GALERIE ---
 async function loadProjects() {
+    if(!galleryContainer) return;
     try {
         const response = await fetch('./projets.json');
         const projets = await response.json();
@@ -129,12 +153,14 @@ async function loadProjects() {
         observeElements();
 
     } catch (e) {
-        console.error("Erreur projets", e);
+        console.error("Erreur chargement projets.json", e);
+        galleryContainer.innerHTML = "<p>Erreur de chargement de la galerie.</p>";
     }
 }
 
-// --- 5. LOGIQUE MODAL (Optimisée) ---
+// --- LOGIQUE MODAL ---
 function openModal(projet) {
+    if(!modal) return;
     modalImg.src = `${dossierImages}${projet.fichier}`;
     modalTitle.textContent = projet.titre;
     modalDesc.textContent = projet.description;
@@ -145,8 +171,8 @@ function openModal(projet) {
 }
 
 function closeModal() {
+    if(!modal) return;
     modal.classList.add('closing');
-    // Délai très court (0.1s) pour correspondre au CSS
     setTimeout(() => {
         modal.classList.remove('active');
         modal.classList.remove('closing');
@@ -155,11 +181,11 @@ function closeModal() {
     }, 100); 
 }
 
-closeModalBtn.addEventListener('click', closeModal);
-modal.addEventListener('click', (e) => { if(e.target === modal) closeModal(); });
+if(closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
+if(modal) modal.addEventListener('click', (e) => { if(e.target === modal) closeModal(); });
 document.addEventListener('keydown', (e) => { if(e.key === "Escape") closeModal(); });
 
-// --- 6. PARTICULES & SCROLL ---
+// --- PARTICULES & SCROLL ---
 function observeElements() {
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
@@ -173,13 +199,16 @@ function observeElements() {
 }
 
 const canvas = document.getElementById('etherCanvas');
-const ctx = canvas.getContext('2d');
+const ctx = canvas ? canvas.getContext('2d') : null;
 let particles = [];
 
-function resizeCanvas(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+function resizeCanvas(){ 
+    if(canvas) { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+}
 window.addEventListener('resize', () => { resizeCanvas(); initParticles(); });
 
 function initParticles() {
+    if(!canvas) return;
     resizeCanvas();
     particles = [];
     const count = window.innerWidth < 768 ? 30 : 60;
@@ -192,6 +221,7 @@ function initParticles() {
 }
 
 function animateParticles() {
+    if(!ctx) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     particles.forEach(p => {
         p.x += p.vx; p.y += p.vy;

@@ -1,0 +1,32 @@
+{
+    "meta": {
+        "title": "Yukaze3D | Forge Numérique"
+    },
+    "branding": {
+        "logoText": "YUKAZE",
+        "logoSuffix": "3D"
+    },
+    "hero": {
+        "title": "Matérialisez l'Imaginaire",
+        "subtitle": "Impression 3D Haute Précision • Conception & Finitions",
+        "ctaText": "Voir les Créations"
+    },
+    "about": {
+        "title": "L'Atelier Yukaze",
+        "description": "De la modélisation à la peinture, nous transformons le virtuel en tangible. Spécialisés dans les props de cosplay, les figurines et les pièces techniques.",
+        "stats": [
+            { "label": "Technologies", "value": "FDM / SLA" },
+            { "label": "Résolution", "value": "4K / 8K" },
+            { "label": "Passion", "value": "100%" }
+        ]
+    },
+    "socials": {
+        "etsyUrl": "https://www.etsy.com/fr/shop/VOTRE_BOUTIQUE",
+        "instagramUrl": "https://instagram.com/",
+        "tiktokUrl": "https://tiktok.com/",
+        "discordUrl": "https://discord.com/"
+    },
+    "footer": {
+        "text": "© 2024 Yukaze3D. Tous droits réservés."
+    }
+}

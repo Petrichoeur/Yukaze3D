@@ -7,19 +7,39 @@
 const PROJETS = [
     {
         fichier: "projet1.jpg",      // Doit être exact (attention aux majuscules)
-        titre: "Casque Cyberpunk",
-        description: "PLA Silk Argent • Finition Brossée"
+        titre: "Guerrière Fantasy",
+        description: "Conception Artisanale et originale"
     },
     {
         fichier: "projet2.jpg",
-        titre: "Épée Légendaire",
-        description: "Assemblage 1m20 • Peinture Acrylique"
+        titre: "Demon Witch",
+        description: "Conception Artisanale et originale"
     },
     {
         fichier: "projet3.jpg",
-        titre: "Totem Ancien",
-        description: "Résine Wash & Cure • Effet Pierre"
+        titre: "Video-Games figurines",
+        description: "Un large choix de référence Geek"
     },
+       {
+        fichier: "projet4.jpg",
+        titre: "Chompette",
+        description: "Diorama Chompette peint et usiné"
+    },
+       {
+        fichier: "projet5.jpg",
+        titre: "Krokmou",
+        description: "Porte-Manteau Krokmou, pratique et esthétique"
+    },
+       {
+        fichier: "projet6.jpg",
+        titre: "Pikachu-Sama",
+        description: "Un Pikachu Samuraï, prêt à en découdre"
+    },
+       {
+        fichier: "projet7.jpg",
+        titre: "Pokeball",
+        description: "Un artefact précieux pour capturer ses rêves"
+    }
     // Exemple d'ajout :
     /*
     {

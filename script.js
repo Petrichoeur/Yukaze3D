@@ -1,6 +1,17 @@
 // --- FLUX TRACKING SYSTEM ---
 const FluxTracker = {
     STORAGE_KEY: 'yukaze_flux_data',
+    SESSION_ID_KEY: 'yukaze_session_id',
+    syncTimeout: null,
+
+    getSessionId() {
+        let sessionId = localStorage.getItem(this.SESSION_ID_KEY);
+        if (!sessionId) {
+            sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem(this.SESSION_ID_KEY, sessionId);
+        }
+        return sessionId;
+    },
 
     getData() {
         const data = localStorage.getItem(this.STORAGE_KEY);
@@ -20,6 +31,7 @@ const FluxTracker = {
             sectionViews: {
                 hero: 0,
                 gallery: 0,
+                shop: 0,
                 about: 0,
                 contact: 0
             },
@@ -35,6 +47,36 @@ const FluxTracker = {
 
     saveData(data) {
         localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
+        this.scheduleSyncToDatabase();
+    },
+
+    // Debounced sync to database to avoid too many API calls
+    scheduleSyncToDatabase() {
+        if (this.syncTimeout) {
+            clearTimeout(this.syncTimeout);
+        }
+        this.syncTimeout = setTimeout(() => {
+            this.syncToDatabase();
+        }, 2000); // Wait 2 seconds after last change before syncing
+    },
+
+    async syncToDatabase() {
+        try {
+            const data = this.getData();
+            data.sessionId = this.getSessionId();
+
+            const response = await fetch('/api/flux/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                console.warn('Failed to sync flux data to database');
+            }
+        } catch (error) {
+            console.warn('Error syncing flux data to database:', error);
+        }
     },
 
     logEvent(type, details = {}) {
@@ -388,7 +430,7 @@ function setupSocialTracking() {
 }
 
 function setupSectionTracking() {
-    const sections = ['hero', 'gallery', 'about', 'contact'];
+    const sections = ['hero', 'gallery', 'shop', 'about', 'contact'];
     const trackedSections = new Set();
 
     const observer = new IntersectionObserver((entries) => {
@@ -407,3 +449,220 @@ function setupSectionTracking() {
         }
     });
 }
+
+// --- SHOP CAROUSEL ---
+const shopTrack = document.getElementById('shopTrack');
+const shopPrevBtn = document.getElementById('shopPrev');
+const shopNextBtn = document.getElementById('shopNext');
+const carouselDots = document.getElementById('carouselDots');
+
+// Shop Modal Elements
+const shopModal = document.getElementById('shop-modal');
+const shopModalImg = document.getElementById('shop-modal-img');
+const shopModalTitle = document.getElementById('shop-modal-title');
+const shopModalDesc = document.getElementById('shop-modal-desc');
+const shopModalPrice = document.getElementById('shop-modal-price');
+const shopModalEtsyBtn = document.getElementById('shop-modal-etsy-btn');
+const closeShopModalBtn = document.querySelector('.close-shop-modal');
+
+let shopItems = [];
+let currentSlide = 0;
+let itemsPerView = 3;
+
+async function loadShopItems() {
+    if (!shopTrack) return;
+
+    try {
+        // Try to fetch from API first (database), fallback to local JSON
+        let items;
+        try {
+            const apiResponse = await fetch('/api/shop');
+            if (apiResponse.ok) {
+                items = await apiResponse.json();
+            } else {
+                throw new Error('API not available');
+            }
+        } catch (apiError) {
+            // Fallback to local JSON file
+            const response = await fetch('./shop.json');
+            items = await response.json();
+        }
+
+        shopItems = items;
+        renderShopCarousel();
+        updateCarouselDots();
+        setupCarouselControls();
+
+    } catch (e) {
+        console.error("Erreur chargement boutique", e);
+        if (shopTrack) {
+            shopTrack.innerHTML = "<p class='shop-error'>Erreur de chargement de la boutique.</p>";
+        }
+    }
+}
+
+function getItemsPerView() {
+    if (window.innerWidth < 600) return 1;
+    if (window.innerWidth < 900) return 2;
+    return 3;
+}
+
+function renderShopCarousel() {
+    if (!shopTrack || shopItems.length === 0) return;
+
+    itemsPerView = getItemsPerView();
+
+    shopTrack.innerHTML = '';
+
+    shopItems.forEach((item, index) => {
+        const card = document.createElement('div');
+        card.classList.add('shop-card');
+
+        // Handle different image sources: API-uploaded images, URLs, or local files
+        let imageSrc;
+        if (item.fichier && item.fichier.startsWith('/api/images/')) {
+            imageSrc = item.fichier;
+        } else if (item.fichier && item.fichier.startsWith('http')) {
+            imageSrc = item.fichier;
+        } else {
+            imageSrc = `${dossierImages}${item.fichier}`;
+        }
+        const etsyUrl = item.etsyUrl || item.etsy_url || '#';
+
+        card.innerHTML = `
+            <div class="shop-card-image" data-item-index="${index}">
+                <img src="${imageSrc}" alt="${item.titre}" loading="lazy">
+                <div class="shop-card-overlay"><i class="fas fa-expand"></i></div>
+            </div>
+            <div class="shop-card-info">
+                <h3>${item.titre}</h3>
+                <p>${item.description}</p>
+                <div class="shop-card-footer">
+                    <span class="shop-price">${item.prix}€</span>
+                    <a href="${etsyUrl}" target="_blank" class="shop-buy-btn" onclick="event.stopPropagation(); FluxTracker.trackSocialClick('etsy')">
+                        <i class="fab fa-etsy"></i> Acheter
+                    </a>
+                </div>
+            </div>
+        `;
+
+        // Add click event to open shop modal when clicking on the image
+        const imageContainer = card.querySelector('.shop-card-image');
+        imageContainer.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openShopModal(item, imageSrc);
+        });
+
+        shopTrack.appendChild(card);
+    });
+
+    updateCarouselPosition();
+}
+
+function updateCarouselPosition() {
+    if (!shopTrack) return;
+    itemsPerView = getItemsPerView();
+    const maxSlide = Math.max(0, shopItems.length - itemsPerView);
+    if (currentSlide > maxSlide) currentSlide = maxSlide;
+
+    const cardWidth = 100 / itemsPerView;
+    const offset = currentSlide * cardWidth;
+    shopTrack.style.transform = `translateX(-${offset}%)`;
+
+    updateCarouselDots();
+}
+
+function updateCarouselDots() {
+    if (!carouselDots) return;
+
+    itemsPerView = getItemsPerView();
+    const totalDots = Math.ceil(shopItems.length / itemsPerView);
+    const currentDot = Math.floor(currentSlide / itemsPerView);
+
+    carouselDots.innerHTML = '';
+
+    for (let i = 0; i < totalDots; i++) {
+        const dot = document.createElement('button');
+        dot.classList.add('carousel-dot');
+        if (i === currentDot) dot.classList.add('active');
+        dot.addEventListener('click', () => {
+            currentSlide = i * itemsPerView;
+            updateCarouselPosition();
+        });
+        carouselDots.appendChild(dot);
+    }
+}
+
+function setupCarouselControls() {
+    if (shopPrevBtn) {
+        shopPrevBtn.addEventListener('click', () => {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateCarouselPosition();
+            }
+        });
+    }
+
+    if (shopNextBtn) {
+        shopNextBtn.addEventListener('click', () => {
+            itemsPerView = getItemsPerView();
+            const maxSlide = Math.max(0, shopItems.length - itemsPerView);
+            if (currentSlide < maxSlide) {
+                currentSlide++;
+                updateCarouselPosition();
+            }
+        });
+    }
+}
+
+// Update carousel on window resize
+window.addEventListener('resize', () => {
+    if (shopItems.length > 0) {
+        renderShopCarousel();
+    }
+});
+
+// Load shop items on page load
+document.addEventListener('DOMContentLoaded', () => {
+    loadShopItems();
+});
+
+// --- SHOP MODAL FUNCTIONS ---
+function openShopModal(item, imageSrc) {
+    if (!shopModal) return;
+
+    shopModalImg.src = imageSrc;
+    shopModalTitle.textContent = item.titre;
+    shopModalDesc.textContent = item.description;
+    shopModalPrice.textContent = `${item.prix}€`;
+
+    const etsyUrl = item.etsyUrl || item.etsy_url || '#';
+    shopModalEtsyBtn.href = etsyUrl;
+
+    // Track shop item view
+    FluxTracker.logEvent('gallery_view', { project: `Shop: ${item.titre}` });
+
+    shopModal.classList.remove('closing');
+    shopModal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeShopModal() {
+    if (!shopModal) return;
+    shopModal.classList.add('closing');
+    setTimeout(() => {
+        shopModal.classList.remove('active');
+        shopModal.classList.remove('closing');
+        shopModalImg.src = '';
+        document.body.style.overflow = 'auto';
+    }, 100);
+}
+
+// Shop modal event listeners
+if (closeShopModalBtn) closeShopModalBtn.addEventListener('click', closeShopModal);
+if (shopModal) shopModal.addEventListener('click', (e) => { if (e.target === shopModal) closeShopModal(); });
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        closeShopModal();
+    }
+});

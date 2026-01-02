@@ -1,0 +1,13 @@
+{
+  "name": "yukaze3d",
+  "version": "1.0.0",
+  "description": "Yukaze3D Portfolio and Shop",
+  "scripts": {
+    "dev": "netlify dev"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^8.0.0",
+    "@netlify/functions": "^2.0.0",
+    "@netlify/neon": "^0.1.0"
+  }
+}

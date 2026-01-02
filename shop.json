@@ -1,0 +1,42 @@
+[
+    {
+        "id": "1",
+        "fichier": "il_794xN.7326385380_g347.jpg",
+        "titre": "Figurine Dragon",
+        "description": "Figurine dragon imprimée et peinte à la main",
+        "prix": "45.00",
+        "etsyUrl": "https://www.etsy.com/fr/shop/Yukaze3D"
+    },
+    {
+        "id": "2",
+        "fichier": "il_794xN.7374332235_jcfn.jpg",
+        "titre": "Statuette Fantasy",
+        "description": "Création artisanale unique",
+        "prix": "65.00",
+        "etsyUrl": "https://www.etsy.com/fr/shop/Yukaze3D"
+    },
+    {
+        "id": "3",
+        "fichier": "il_794xN.7485894683_engg.jpg",
+        "titre": "Diorama Geek",
+        "description": "Pièce de collection détaillée",
+        "prix": "89.00",
+        "etsyUrl": "https://www.etsy.com/fr/shop/Yukaze3D"
+    },
+    {
+        "id": "4",
+        "fichier": "il_794xN.7538463354_3c4q.jpg",
+        "titre": "Prop Cosplay",
+        "description": "Accessoire de cosplay haute qualité",
+        "prix": "120.00",
+        "etsyUrl": "https://www.etsy.com/fr/shop/Yukaze3D"
+    },
+    {
+        "id": "5",
+        "fichier": "il_794xN.7538463356_nfj7.jpg",
+        "titre": "Figurine Collector",
+        "description": "Édition limitée peinte à la main",
+        "prix": "75.00",
+        "etsyUrl": "https://www.etsy.com/fr/shop/Yukaze3D"
+    }
+]

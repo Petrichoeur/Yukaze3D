@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="page-title">Chargement...</title> <link rel="stylesheet" href="style.css">
+    <title id="page-title">Chargement...</title>
+    <link rel="stylesheet" href="style.css">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,19 +13,25 @@
 </head>
 <body>
 
+    <div id="welcome-screen">
+        <div class="welcome-content">
+            <h1 class="logo-welcome">YUKAZE<span>3D</span></h1>
+            <p>Chargement des ressources magiques...</p>
+            <button id="start-experience" class="cta-btn">Entrer</button>
+        </div>
+    </div>
+
     <canvas id="etherCanvas"></canvas>
 
     <nav class="glass-nav">
-        <div class="logo" id="nav-logo">...</div>
+        <div class="logo" id="nav-logo">YUKAZE<span>3D</span></div>
         <ul class="nav-links">
             <li><a href="#hero">Le Portail</a></li>
             <li><a href="#gallery">Artefacts</a></li>
             <li><a href="#about">L'Atelier</a></li>
             <li><a href="#contact">Guilde</a></li>
         </ul>
-        <div class="burger">
-            <div class="line1"></div><div class="line2"></div><div class="line3"></div>
-        </div>
+        <div class="burger"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div>
     </nav>
 
     <header id="hero">
@@ -47,8 +54,7 @@
         <div class="glass-panel scroll-reveal">
             <h2 id="about-title">...</h2>
             <p id="about-desc">...</p>
-            <ul class="stats" id="about-stats">
-                </ul>
+            <ul class="stats" id="about-stats"></ul>
         </div>
     </section>
 
@@ -82,10 +88,13 @@
                 </div>
             </div>
         </div>
-        <div class="copyright">
-            <p id="footer-text">&copy; 2024</p>
-        </div>
+        <div class="copyright"><p id="footer-text">&copy; 2024</p></div>
     </footer>
+
+    <audio id="bg-music" loop>
+        <source src="" type="audio/mpeg">
+    </audio>
+    <div id="music-control" class="music-crystal"><i class="fas fa-volume-up"></i></div>
 
     <script src="script.js"></script>
 </body>

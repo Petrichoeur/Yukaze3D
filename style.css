@@ -28,7 +28,27 @@ body {
     margin-bottom: 1rem; text-shadow: 0 0 20px var(--primary); letter-spacing: 5px;
 }
 .logo-welcome span { color: var(--primary); }
-.welcome-content p { color: #888; margin-bottom: 2rem; font-family: var(--font-title); }
+/* --- CORRECTION CENTRAGE --- */
+.welcome-content {
+    display: flex;              /* Active le mode flexible */
+    flex-direction: column;     /* Empile les éléments (Titre, Texte, Bouton) */
+    align-items: center;        /* Centre horizontalement */
+    justify-content: center;    /* Centre verticalement */
+    text-align: center;         /* Assure que le texte est centré */
+    gap: 2rem;                  /* Ajoute de l'espace propre entre les éléments */
+    animation: fadeIn 2s ease;
+    width: 100%;                /* Prend toute la largeur disponible */
+    max-width: 600px;           /* Limite la largeur pour faire joli */
+    padding: 20px;
+}
+
+/* Assurons-nous que le bouton a bien un curseur de clic */
+#start-experience {
+    cursor: pointer;
+    z-index: 10000; /* Force le bouton au-dessus de tout */
+    pointer-events: auto; /* Force la réactivité */
+}
+
 
 /* --- CANVAS & NAV --- */
 #etherCanvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background: radial-gradient(circle at center, #111526 0%, #000000 100%); }

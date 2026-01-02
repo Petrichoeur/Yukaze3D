@@ -30,7 +30,7 @@
         "text": "© 2026 Yukaze3D. Tous droits réservés."
     }, 
         "audio": {
-        "source": "https://cdn.pixabay.com/download/audio/2022/10/25/audio_515949164b.mp3?filename=fantasy-orchestral-124036.mp3",
+        "source": "./theme.mp3",
         "volume": 0.4,
         "btnText": "Rentrer dans la Forge"
     }

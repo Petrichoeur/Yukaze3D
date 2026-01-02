@@ -920,4 +920,397 @@ const originalUnlockDashboard = unlockDashboard;
 unlockDashboard = function() {
     originalUnlockDashboard();
     initShopManagement();
+    initMusicSettings();
 };
+
+// --- MUSIC SETTINGS MANAGEMENT ---
+let currentMusicSettings = {
+    source_type: 'default',
+    source_url: './config/theme.mp3',
+    volume: 0.20,
+    original_filename: 'theme.mp3'
+};
+
+// Music settings DOM elements
+const musicUrlInput = document.getElementById('music-url-input');
+const musicFileUpload = document.getElementById('music-file-upload');
+const musicUploadFileName = document.getElementById('music-upload-file-name');
+const musicUploadProgress = document.getElementById('music-upload-progress');
+const musicProgressBar = document.getElementById('music-progress-bar');
+const musicProgressText = document.getElementById('music-progress-text');
+const musicVolumeSlider = document.getElementById('music-volume-slider');
+const volumeValueDisplay = document.getElementById('volume-value-display');
+const currentMusicName = document.getElementById('current-music-name');
+const musicPreview = document.getElementById('music-preview');
+const testMusicBtn = document.getElementById('test-music-btn');
+const resetMusicBtn = document.getElementById('reset-music-btn');
+const saveMusicSettingsBtn = document.getElementById('save-music-settings-btn');
+const musicTabs = document.querySelectorAll('.music-tab');
+const musicUrlTab = document.getElementById('music-url-tab');
+const musicUploadTab = document.getElementById('music-upload-tab');
+
+let isMusicUploading = false;
+
+// Load music settings from API
+async function loadMusicSettings() {
+    try {
+        const response = await fetch('/api/music/settings');
+        if (response.ok) {
+            currentMusicSettings = await response.json();
+            updateMusicSettingsUI();
+        }
+    } catch (error) {
+        console.warn('Failed to load music settings:', error);
+    }
+}
+
+// Update UI with current settings
+function updateMusicSettingsUI() {
+    // Update current music display
+    if (currentMusicName) {
+        if (currentMusicSettings.is_default || currentMusicSettings.source_type === 'default') {
+            currentMusicName.textContent = 'theme.mp3 (par defaut)';
+        } else {
+            currentMusicName.textContent = currentMusicSettings.original_filename || 'Personnalise';
+        }
+    }
+
+    // Update volume slider
+    if (musicVolumeSlider) {
+        const volumePercent = Math.round(currentMusicSettings.volume * 100);
+        musicVolumeSlider.value = volumePercent;
+        if (volumeValueDisplay) {
+            volumeValueDisplay.textContent = volumePercent + '%';
+        }
+    }
+
+    // Update URL input if it's a URL type
+    if (musicUrlInput && currentMusicSettings.source_type === 'url') {
+        musicUrlInput.value = currentMusicSettings.source_url;
+    }
+
+    // Update preview
+    if (musicPreview) {
+        musicPreview.src = currentMusicSettings.source_url;
+        musicPreview.volume = currentMusicSettings.volume;
+    }
+}
+
+// Handle tab switching
+function initMusicTabs() {
+    musicTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const targetTab = tab.dataset.tab;
+
+            // Update tab buttons
+            musicTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+
+            // Update tab content
+            if (musicUrlTab) musicUrlTab.classList.remove('active');
+            if (musicUploadTab) musicUploadTab.classList.remove('active');
+
+            if (targetTab === 'url' && musicUrlTab) {
+                musicUrlTab.classList.add('active');
+            } else if (targetTab === 'upload' && musicUploadTab) {
+                musicUploadTab.classList.add('active');
+            }
+        });
+    });
+}
+
+// Handle volume slider change
+function initVolumeSlider() {
+    if (musicVolumeSlider) {
+        musicVolumeSlider.addEventListener('input', (e) => {
+            const volumePercent = parseInt(e.target.value);
+            if (volumeValueDisplay) {
+                volumeValueDisplay.textContent = volumePercent + '%';
+            }
+
+            // Update preview volume
+            if (musicPreview) {
+                musicPreview.volume = volumePercent / 100;
+            }
+        });
+    }
+}
+
+// Handle music file upload
+function handleMusicFileSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/mp4', 'audio/x-m4a', 'audio/m4a'];
+    if (!allowedTypes.includes(file.type)) {
+        alert('Type de fichier non supporte. Veuillez choisir un fichier MP3, WAV, OGG ou M4A.');
+        resetMusicFileUpload();
+        return;
+    }
+
+    // Validate file size (10MB max)
+    const maxSize = 10 * 1024 * 1024;
+    if (file.size > maxSize) {
+        alert('Le fichier est trop volumineux. Taille maximale: 10MB');
+        resetMusicFileUpload();
+        return;
+    }
+
+    // Update filename display
+    if (musicUploadFileName) {
+        musicUploadFileName.textContent = file.name;
+    }
+
+    // Auto-upload the music
+    uploadMusicFile(file);
+}
+
+// Upload music file to server
+async function uploadMusicFile(file) {
+    if (isMusicUploading) return;
+    isMusicUploading = true;
+
+    // Show progress
+    if (musicUploadProgress) {
+        musicUploadProgress.classList.add('active');
+    }
+    if (musicProgressBar) {
+        musicProgressBar.style.width = '0%';
+    }
+    if (musicProgressText) {
+        musicProgressText.textContent = 'Telechargement en cours...';
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append('audio', file);
+
+        // Simulate progress
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += Math.random() * 15;
+            if (progress > 90) progress = 90;
+            if (musicProgressBar) {
+                musicProgressBar.style.width = progress + '%';
+            }
+        }, 200);
+
+        const response = await fetch('/api/music/upload', {
+            method: 'POST',
+            body: formData
+        });
+
+        clearInterval(progressInterval);
+
+        if (response.ok) {
+            const result = await response.json();
+
+            // Complete the progress bar
+            if (musicProgressBar) {
+                musicProgressBar.style.width = '100%';
+            }
+            if (musicProgressText) {
+                musicProgressText.textContent = 'Telecharge avec succes!';
+                musicProgressText.classList.add('success');
+            }
+
+            // Update current settings (not saved yet)
+            currentMusicSettings.source_type = 'uploaded';
+            currentMusicSettings.source_url = result.url;
+            currentMusicSettings.original_filename = result.originalName || file.name;
+
+            // Update preview
+            if (musicPreview) {
+                musicPreview.src = result.url;
+            }
+
+            // Hide progress after a short delay
+            setTimeout(() => {
+                if (musicUploadProgress) {
+                    musicUploadProgress.classList.remove('active');
+                }
+                if (musicProgressText) {
+                    musicProgressText.classList.remove('success');
+                    musicProgressText.textContent = 'Pret';
+                }
+            }, 2000);
+        } else {
+            const error = await response.json();
+            throw new Error(error.error || 'Echec du telechargement');
+        }
+    } catch (error) {
+        console.error('Error uploading music:', error);
+        if (musicProgressBar) {
+            musicProgressBar.style.width = '100%';
+            musicProgressBar.classList.add('error');
+        }
+        if (musicProgressText) {
+            musicProgressText.textContent = 'Erreur: ' + error.message;
+            musicProgressText.classList.add('error');
+        }
+
+        // Reset after showing error
+        setTimeout(() => {
+            resetMusicFileUpload();
+        }, 3000);
+    } finally {
+        isMusicUploading = false;
+    }
+}
+
+// Reset music file upload UI
+function resetMusicFileUpload() {
+    if (musicFileUpload) {
+        musicFileUpload.value = '';
+    }
+    if (musicUploadFileName) {
+        musicUploadFileName.textContent = 'Choisir un fichier';
+    }
+    if (musicUploadProgress) {
+        musicUploadProgress.classList.remove('active');
+    }
+    if (musicProgressBar) {
+        musicProgressBar.style.width = '0%';
+        musicProgressBar.classList.remove('error');
+    }
+    if (musicProgressText) {
+        musicProgressText.textContent = 'Pret';
+        musicProgressText.classList.remove('success', 'error');
+    }
+}
+
+// Test current music configuration
+function testMusic() {
+    if (!musicPreview) return;
+
+    // Get current configuration
+    const activeTab = document.querySelector('.music-tab.active');
+    const tabType = activeTab ? activeTab.dataset.tab : 'url';
+
+    let sourceUrl = currentMusicSettings.source_url;
+
+    if (tabType === 'url' && musicUrlInput && musicUrlInput.value.trim()) {
+        sourceUrl = musicUrlInput.value.trim();
+    }
+
+    // Update preview source
+    musicPreview.src = sourceUrl;
+    musicPreview.volume = (musicVolumeSlider ? musicVolumeSlider.value : 20) / 100;
+
+    // Try to play
+    const playPromise = musicPreview.play();
+    if (playPromise !== undefined) {
+        playPromise.catch(error => {
+            console.warn('Could not play audio:', error);
+            alert('Impossible de lire la musique. Verifiez que l\'URL est valide et accessible.');
+        });
+    }
+}
+
+// Reset to default music
+function resetToDefaultMusic() {
+    if (!confirm('Reinitialiser la musique vers theme.mp3 par defaut ?')) return;
+
+    currentMusicSettings = {
+        source_type: 'default',
+        source_url: './config/theme.mp3',
+        volume: currentMusicSettings.volume, // Keep current volume
+        original_filename: 'theme.mp3'
+    };
+
+    // Clear inputs
+    if (musicUrlInput) musicUrlInput.value = '';
+    resetMusicFileUpload();
+
+    // Update UI
+    updateMusicSettingsUI();
+}
+
+// Save music settings to database
+async function saveMusicSettings() {
+    const activeTab = document.querySelector('.music-tab.active');
+    const tabType = activeTab ? activeTab.dataset.tab : 'url';
+
+    // Prepare settings based on active tab
+    const settingsToSave = {
+        volume: (musicVolumeSlider ? musicVolumeSlider.value : 20) / 100,
+        source_type: currentMusicSettings.source_type,
+        source_url: currentMusicSettings.source_url,
+        original_filename: currentMusicSettings.original_filename
+    };
+
+    // If URL tab is active and has a value, use that
+    if (tabType === 'url' && musicUrlInput && musicUrlInput.value.trim()) {
+        settingsToSave.source_type = 'url';
+        settingsToSave.source_url = musicUrlInput.value.trim();
+        settingsToSave.original_filename = 'URL externe';
+    }
+
+    // If source is still default-like, mark it as default
+    if (settingsToSave.source_url === './config/theme.mp3' || !settingsToSave.source_url) {
+        settingsToSave.source_type = 'default';
+        settingsToSave.source_url = './config/theme.mp3';
+        settingsToSave.original_filename = 'theme.mp3';
+    }
+
+    try {
+        const response = await fetch('/api/music/settings/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(settingsToSave)
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            currentMusicSettings = result.settings;
+            updateMusicSettingsUI();
+            alert('Parametres audio enregistres avec succes!');
+        } else {
+            const error = await response.json();
+            alert('Erreur: ' + (error.error || 'Impossible de sauvegarder les parametres'));
+        }
+    } catch (error) {
+        console.error('Error saving music settings:', error);
+        alert('Erreur de connexion. Verifiez votre connexion internet.');
+    }
+}
+
+// Initialize music settings management
+function initMusicSettings() {
+    // Load current settings
+    loadMusicSettings();
+
+    // Initialize tabs
+    initMusicTabs();
+
+    // Initialize volume slider
+    initVolumeSlider();
+
+    // File upload handler
+    if (musicFileUpload) {
+        musicFileUpload.addEventListener('change', handleMusicFileSelect);
+    }
+
+    // Test button
+    if (testMusicBtn) {
+        testMusicBtn.addEventListener('click', testMusic);
+    }
+
+    // Reset button
+    if (resetMusicBtn) {
+        resetMusicBtn.addEventListener('click', resetToDefaultMusic);
+    }
+
+    // Save button
+    if (saveMusicSettingsBtn) {
+        saveMusicSettingsBtn.addEventListener('click', saveMusicSettings);
+    }
+}
+
+// Initialize music settings when dashboard loads
+document.addEventListener('DOMContentLoaded', () => {
+    if (checkAuth()) {
+        initMusicSettings();
+    }
+});

@@ -287,15 +287,41 @@ async function loadAdminConfig() {
         document.getElementById('link-discord').href = config.socials.discordUrl;
         document.getElementById('footer-text').textContent = config.footer.text;
 
-        // Audio Setup
-        if(config.audio && audioPlayer) {
-            audioPlayer.src = config.audio.source;
-            audioPlayer.volume = config.audio.volume;
-            if(startBtn) startBtn.innerText = config.audio.btnText;
-        }
+        // Audio Setup - First try to load from database, fallback to admin.json config
+        await loadMusicSettingsForMain(config);
 
     } catch (e) {
         console.error("Erreur chargement admin.json. Vérifiez la syntaxe du fichier.", e);
+    }
+}
+
+// --- LOAD MUSIC SETTINGS FROM DATABASE ---
+async function loadMusicSettingsForMain(adminConfig) {
+    try {
+        // Try to fetch music settings from database
+        const response = await fetch('/api/music/settings');
+        if (response.ok) {
+            const musicSettings = await response.json();
+
+            if (audioPlayer) {
+                // Use settings from database
+                audioPlayer.src = musicSettings.source_url || adminConfig.audio.source;
+                audioPlayer.volume = musicSettings.volume || adminConfig.audio.volume;
+            }
+            if (startBtn && adminConfig.audio) {
+                startBtn.innerText = adminConfig.audio.btnText;
+            }
+            return;
+        }
+    } catch (error) {
+        console.warn('Could not load music settings from database, using defaults:', error);
+    }
+
+    // Fallback to admin.json config
+    if (adminConfig.audio && audioPlayer) {
+        audioPlayer.src = adminConfig.audio.source;
+        audioPlayer.volume = adminConfig.audio.volume;
+        if (startBtn) startBtn.innerText = adminConfig.audio.btnText;
     }
 }
 

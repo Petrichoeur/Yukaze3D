@@ -1,5 +1,12 @@
 // --- DOM ELEMENTS ---
 const galleryContainer = document.getElementById('galleryContainer');
+const welcomeScreen = document.getElementById('welcome-screen');
+const startBtn = document.getElementById('start-experience');
+const audioPlayer = document.getElementById('bg-music');
+const musicBtn = document.getElementById('music-control');
+const musicIcon = musicBtn.querySelector('i');
+
+// Modal Elements
 const modal = document.getElementById('ff-modal');
 const modalImg = document.getElementById('modal-img-full');
 const modalTitle = document.getElementById('modal-title');
@@ -9,37 +16,31 @@ const dossierImages = './projets/';
 
 // --- INITIALISATION ---
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. D'abord on configure le site via admin.json
-    await loadAdminConfig();
-    // 2. Ensuite on charge les projets
-    await loadProjects();
-    // 3. Enfin on lance les effets visuels
-    initVisuals();
+    await loadAdminConfig(); // Charger config & Musique
+    await loadProjects();    // Charger galerie
+    
+    // NB: On lance les particules uniquement après le clic "Entrer" pour l'effet "Vibe"
 });
 
-// --- CHARGEMENT CONFIG ADMIN ---
+// --- 1. CHARGEMENT CONFIG ADMIN ---
 async function loadAdminConfig() {
     try {
         const response = await fetch('./admin.json');
         const config = await response.json();
 
-        // 1. Meta & Titre
+        // Branding
         document.title = config.meta.title;
+        document.getElementById('nav-logo').innerHTML = `${config.branding.logoText}<span>${config.branding.logoSuffix}</span>`;
+        document.querySelector('.logo-welcome').innerHTML = `${config.branding.logoText}<span>${config.branding.logoSuffix}</span>`;
 
-        // 2. Logo
-        const logoDiv = document.getElementById('nav-logo');
-        logoDiv.innerHTML = `${config.branding.logoText}<span>${config.branding.logoSuffix}</span>`;
-
-        // 3. Hero Section
+        // Hero & About
         document.getElementById('hero-title').textContent = config.hero.title;
         document.getElementById('hero-subtitle').textContent = config.hero.subtitle;
         document.getElementById('hero-cta').textContent = config.hero.ctaText;
-
-        // 4. About Section
         document.getElementById('about-title').textContent = config.about.title;
         document.getElementById('about-desc').textContent = config.about.description;
         
-        // Stats dynamiques
+        // Stats
         const statsList = document.getElementById('about-stats');
         config.about.stats.forEach(stat => {
             const li = document.createElement('li');
@@ -47,19 +48,57 @@ async function loadAdminConfig() {
             statsList.appendChild(li);
         });
 
-        // 5. Réseaux Sociaux & Footer
+        // Liens
         document.getElementById('link-etsy').href = config.socials.etsyUrl;
         document.getElementById('link-insta').href = config.socials.instagramUrl;
         document.getElementById('link-tiktok').href = config.socials.tiktokUrl;
         document.getElementById('link-discord').href = config.socials.discordUrl;
         document.getElementById('footer-text').textContent = config.footer.text;
 
+        // AUDIO SETUP (Externe)
+        if(config.audio) {
+            audioPlayer.src = config.audio.source;
+            audioPlayer.volume = config.audio.volume;
+            startBtn.innerText = config.audio.btnText;
+        }
+
     } catch (e) {
-        console.error("Erreur chargement admin.json", e);
+        console.error("Erreur admin.json", e);
     }
 }
 
-// --- CHARGEMENT PROJETS ---
+// --- 2. LOGIQUE D'ACTIVATION (START) ---
+if(startBtn) {
+    startBtn.addEventListener('click', () => {
+        // A. Lancer audio
+        audioPlayer.play().then(() => {
+            musicBtn.classList.add('playing');
+        }).catch(e => console.log("Erreur lecture:", e));
+
+        // B. Cacher écran accueil
+        welcomeScreen.classList.add('hidden');
+
+        // C. Lancer particules
+        initParticles();
+    });
+}
+
+// --- 3. GESTION MUSIQUE FLOTTANTE ---
+musicBtn.addEventListener('click', () => {
+    if(audioPlayer.paused) {
+        audioPlayer.play();
+        musicBtn.classList.add('playing');
+        musicIcon.classList.remove('fa-volume-mute');
+        musicIcon.classList.add('fa-volume-up');
+    } else {
+        audioPlayer.pause();
+        musicBtn.classList.remove('playing');
+        musicIcon.classList.remove('fa-volume-up');
+        musicIcon.classList.add('fa-volume-mute');
+    }
+});
+
+// --- 4. CHARGEMENT GALERIE ---
 async function loadProjects() {
     try {
         const response = await fetch('./projets.json');
@@ -70,18 +109,19 @@ async function loadProjects() {
         projets.forEach((projet, index) => {
             const card = document.createElement('div');
             card.classList.add('card');
-            card.style.transitionDelay = `${index * 0.1}s`; // Effet cascade
+            card.style.transitionDelay = `${index * 0.1}s`; 
             
             card.innerHTML = `
                 <div class="card-image">
                     <img src="${dossierImages}${projet.fichier}" alt="${projet.titre}" loading="lazy">
-                    <div class="card-info" style="position:absolute; bottom:0; width:100%; background:rgba(0,0,0,0.8);">
-                        <h3>${projet.titre}</h3>
-                    </div>
+                    <div class="overlay"><i class="fas fa-expand"></i></div>
+                </div>
+                <div class="card-info">
+                    <h3>${projet.titre}</h3>
+                    <p>${projet.description}</p>
                 </div>
             `;
             
-            // Clic pour ouvrir le modal
             card.addEventListener('click', () => openModal(projet));
             galleryContainer.appendChild(card);
         });
@@ -89,11 +129,11 @@ async function loadProjects() {
         observeElements();
 
     } catch (e) {
-        galleryContainer.innerHTML = "<p>Erreur chargement galerie.</p>";
+        console.error("Erreur projets", e);
     }
 }
 
-// --- LOGIQUE MODAL ---
+// --- 5. LOGIQUE MODAL (Optimisée) ---
 function openModal(projet) {
     modalImg.src = `${dossierImages}${projet.fichier}`;
     modalTitle.textContent = projet.titre;
@@ -106,23 +146,20 @@ function openModal(projet) {
 
 function closeModal() {
     modal.classList.add('closing');
+    // Délai très court (0.1s) pour correspondre au CSS
     setTimeout(() => {
         modal.classList.remove('active');
         modal.classList.remove('closing');
         modalImg.src = "";
         document.body.style.overflow = 'auto';
-    }, 100); // Doit matcher l'animation CSS
+    }, 100); 
 }
 
 closeModalBtn.addEventListener('click', closeModal);
 modal.addEventListener('click', (e) => { if(e.target === modal) closeModal(); });
 document.addEventListener('keydown', (e) => { if(e.key === "Escape") closeModal(); });
 
-// --- SYSTEMES VISUELS (Particules & Scroll) ---
-function initVisuals() {
-    initParticles();
-}
-
+// --- 6. PARTICULES & SCROLL ---
 function observeElements() {
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
@@ -132,11 +169,9 @@ function observeElements() {
             }
         });
     }, { threshold: 0.1 });
-
     document.querySelectorAll('.card, .scroll-reveal').forEach(el => observer.observe(el));
 }
 
-// Canvas Particules Simplifié
 const canvas = document.getElementById('etherCanvas');
 const ctx = canvas.getContext('2d');
 let particles = [];
@@ -162,16 +197,13 @@ function animateParticles() {
         p.x += p.vx; p.y += p.vy;
         if(p.x<0) p.x=canvas.width; if(p.x>canvas.width) p.x=0;
         if(p.y<0) p.y=canvas.height; if(p.y>canvas.height) p.y=0;
-        
         ctx.fillStyle = `rgba(0, 210, 255, ${p.opacity})`;
         ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
     });
-    // Liens constellations
+    // Constellation
     particles.forEach((a, i) => {
         for(let j=i; j<particles.length; j++){
-            let dx = a.x - particles[j].x;
-            let dy = a.y - particles[j].y;
-            let dist = dx*dx + dy*dy;
+            let dx = a.x - particles[j].x; let dy = a.y - particles[j].y; let dist = dx*dx + dy*dy;
             if(dist < 10000) {
                 ctx.strokeStyle = `rgba(0,210,255,${0.1 - dist/100000})`;
                 ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(particles[j].x, particles[j].y); ctx.stroke();
